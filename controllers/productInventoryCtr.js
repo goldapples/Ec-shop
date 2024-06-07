@@ -130,3 +130,111 @@ exports.getAll = async (req, res) => {
     console.log(error);
   }
 };
+
+exports.sales = async (req, res) => {
+  try {
+    const role = await Role.findOne({ _id: req.user.role });
+    if (role.title === "admin") {
+      const result = await ProductSales.aggregate([
+        {
+          $match: {
+            delete: false,
+          },
+        },
+        {
+          $sort: {
+            updatedAt: -1,
+          },
+        },
+        {
+          $lookup: {
+            from: "products",
+            localField: "product",
+            foreignField: "_id",
+            pipeline: [
+              {
+                $project: {
+                  title: 1,
+                  files: 1,
+                  priceoff: 1,
+                },
+              },
+            ],
+            as: "product",
+          },
+        },
+        { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
+        {
+          $lookup: {
+            from: "user",
+            localField: "person",
+            foreignField: "_id",
+            pipeline: [
+              {
+                $project: {
+                  name: 1,
+                  avartar: 1,
+                },
+              },
+            ],
+            as: "user",
+          },
+        },
+        { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+      ]);
+      res.status(200).json({ allDb: result });
+    } else if (role.title === "manager" || role.title === "user") {
+      const result = await ProductSales.aggregate([
+        {
+          $match: {
+            delete: false,
+            store: req.user.store,
+          },
+        },
+        {
+          $sort: {
+            updatedAt: -1,
+          },
+        },
+        {
+          $lookup: {
+            from: "products",
+            localField: "product",
+            foreignField: "_id",
+            pipeline: [
+              {
+                $project: {
+                  title: 1,
+                  files: 1,
+                  priceoff: 1,
+                },
+              },
+            ],
+            as: "product",
+          },
+        },
+        { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
+        {
+          $lookup: {
+            from: "user",
+            localField: "person",
+            foreignField: "_id",
+            pipeline: [
+              {
+                $project: {
+                  name: 1,
+                  avartar: 1,
+                },
+              },
+            ],
+            as: "user",
+          },
+        },
+        { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+      ]);
+      res.status(200).json({ allDb: result });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
