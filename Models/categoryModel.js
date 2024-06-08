@@ -11,7 +11,7 @@ const categorySchema = new mongoose.Schema(
     },
     parentId: {
       type: Schema.Types.ObjectId,
-      default: null,
+      ref: "Category"
     },
     delete: {
       type: Boolean,
