@@ -4,15 +4,19 @@ const { modelOption } = require("./config");
 const categorySchema = new mongoose.Schema(
   {
     title: {
-      type: String
+      type: String,
     },
     description: {
-      type: String
+      type: String,
+    },
+    parentId: {
+      type: Schema.Types.ObjectId,
+      ref: "Category"
     },
     delete: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   modelOption("category")
 );

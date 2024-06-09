@@ -3,25 +3,24 @@ const jwt = require("jsonwebtoken");
 const config = require("../config/config");
 const passport = require("passport");
 const Category = require("../Models/categoryModel");
+const productsModel = require("../Models/productsModel");
 // const { default: message } = require("../../Admin/src/pages/messgae");
-
-
 
 exports.createCategory = async (req, res) => {
   await Category.findOne({ title: req.body.title }).then(async (matched) => {
     if (matched) {
       return res.json({
         message: "Same category already exist!",
-        type: 'success',
+        type: "success",
       });
     }
     const newCategory = new Category(req.body);
     await newCategory.save((err) => {
       if (err) {
-        return res.status(500).json({type: 'error', message: err.message });
+        return res.status(500).json({ type: "error", message: err.message });
       } else {
         return res.status(200).json({
-          type: 'success',
+          type: "success",
           message: "Create category successfully!",
         });
       }
@@ -31,15 +30,17 @@ exports.createCategory = async (req, res) => {
 
 exports.getAllCategories = async (req, res) => {
   try {
-    const categories = await Category.find({delete: false}).sort({ updatedAt: -1 });
+    const categories = await Category.find({ delete: false }).sort({
+      updatedAt: -1,
+    });
     return res.status(200).json({
-      type: 'success',
+      type: "success",
       message: "Get all categories successfully!",
       categories: categories,
     });
   } catch (error) {
     return res.status(500).json({
-      type: 'error',
+      type: "error",
       message: error.message,
     });
   }
@@ -75,7 +76,7 @@ exports.editCategory = async (req, res) => {
   try {
     if (!category) {
       return res.status(404).json({
-        type: 'error',
+        type: "error",
         message: `No category with id: ${categoryId} exist!`,
       });
     } else {
@@ -83,13 +84,10 @@ exports.editCategory = async (req, res) => {
         async (matched) => {
           if (matched) {
             if (matched._id == categoryId) {
-              await Category.findByIdAndUpdate(
-                categoryId,
-                {
-                  title: req.body.title,
-                  description: req.body.description,
-                },
-              );
+              await Category.findByIdAndUpdate(categoryId, {
+                title: req.body.title,
+                description: req.body.description,
+              });
               return res.status(200).json({
                 message: "Category updated successfully!",
               });
@@ -126,27 +124,73 @@ exports.editCategory = async (req, res) => {
 };
 
 exports.deleteCategory = async (req, res) => {
-
   const { id: categoryId } = req.params;
   try {
-    const category = await Category.findByIdAndUpdate(categoryId, {delete: true});
+    const category = await Category.findByIdAndUpdate(categoryId, {
+      delete: true,
+    });
     if (!category) {
       return res.status(404).json({
-        type: 'error',
+        type: "error",
         message: `No category with id: ${categoryId} exist!`,
       });
     } else {
       return res.status(200).json({
-        type: 'success',
+        type: "success",
         message: "Delete category successfully!",
       });
     }
   } catch (error) {
     return res.status(500).json({
-      type: 'error',
+      type: "error",
       message: error.message,
     });
   }
 };
 
 exports.multiDeleteCategory = async (req, res) => {};
+
+exports.getAllCategoriesByGuest = async (req, res) => {
+  try {
+    const product = await productsModel.aggregate([
+      {
+        $match: {
+          delete: false,
+        },
+      },
+      {
+        $group: {
+          _id: "$category",
+          cnt: { $push: "$_id" },
+        },
+      },
+    ]);
+
+    const categorieList = await Category.aggregate([
+      {
+        $match: {
+          delete: false,
+        },
+      },
+    ]);
+
+    const categories = categorieList.map((item) => {
+      return {
+        ...item,
+        productCount: product.filter((value) => {
+          return value._id.toString() == item._id.toString();
+        })[0]?.cnt.length,
+      };
+    });
+    return res.status(200).json({
+      type: "success",
+      message: "Get all categories successfully!",
+      categories: categories,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      type: "error",
+      message: error.message,
+    });
+  }
+};
