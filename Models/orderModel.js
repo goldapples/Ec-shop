@@ -6,14 +6,44 @@ const orderSchema = new mongoose.Schema(
 
     user: {
       type: Schema.Types.ObjectId,
-      ref: "User"
+      ref: "Guest"
     },
-    product: {
+    products: [{
+      product: {
+        type: Schema.Types.ObjectId,
+        ref: "Products"
+      },
+      quantity: {
+        type: Number,
+      },
+      delete: {
+        type: Boolean,
+        default: false
+      }
+    }],
+    shipping: [{
+      country: {
+        type: String
+      },
+      prefacture: {
+        type: String
+      },
+      city: {
+        type: String
+      },
+      apartment: {
+        type: String
+      },
+      roomNumber: {
+        type: Number
+      }
+    }],
+    store: {
       type: Schema.Types.ObjectId,
-      ref: "Products"
+      ref: "Store"
     },
-    quantity: {
-      type: Number
+    wallet: {
+      type: String
     },
     permission: {
       type: Boolean,
