@@ -4,17 +4,33 @@ const { modelOption } = require("./config");
 const categorySchema = new mongoose.Schema(
   {
     title: {
-      type: String
+      type: String,
     },
+    parentId: {
+      type: Schema.Types.ObjectId,
+      ref: "Category",
+    },
+    idPath: { type: String },
     description: {
-      type: String
+      type: String,
     },
     delete: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   modelOption("category")
 );
 
 module.exports = mongoose.model("Category", categorySchema);
+
+const resetCategory = async () => {
+  const CategoryModel = model("Category");
+  var ancestorCategory = await CategoryModel.find({ title: "All" }, "");
+  var ancestor = new CategoryModel({
+    title: "All",
+  });
+  if (!ancestorCategory[0]) ancestor.save();
+};
+
+resetCategory();
