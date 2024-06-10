@@ -1,6 +1,10 @@
 const Products = require("../Models/productsModel");
 const Role = require("../Models/roleModel");
 const File = require("../Models/fileModel");
+const mongoose = require("mongoose");
+const dayjs = require("dayjs");
+const today = dayjs().$d;
+const threeDay = dayjs().add(-3, "d").$d;
 
 exports.create = async (req, res) => {
   try {
@@ -122,5 +126,250 @@ exports.update = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getAllByGuest = async (req, res) => {
+  // console.log("fdsf", req.body.filterCondition);
+  try {
+    if (req.body.filterCondition.category != "All") {
+      if (req.body.filterCondition.onlyNew == true) {
+        const total = await Products.aggregate([
+          {
+            $match: {
+              delete: false,
+              category: mongoose.Types.ObjectId(
+                req.body.filterCondition.category
+              ),
+              // favourite:req.body.filterCondition.favourite,
+              price: {
+                $gte: 1 * req.body.filterCondition.lowerPrice,
+                $lte: 1 * req.body.filterCondition.uppperPrice,
+              },
+              date: {
+                $gte: threeDay,
+                $lte: today,
+              },
+              title: {
+                $regex: req.body.filterCondition.searchWord,
+                $options: "i",
+              },
+              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
+            },
+          },
+          {
+            $count: "total",
+          },
+        ]);
+        const allDb = await Products.aggregate([
+          {
+            $match: {
+              delete: false,
+              category: mongoose.Types.ObjectId(
+                req.body.filterCondition.category
+              ),
+              // favourite:req.body.filterCondition.favourite,
+              price: {
+                $gte: 1 * req.body.filterCondition.lowerPrice,
+                $lte: 1 * req.body.filterCondition.upperPrice,
+              },
+              date: {
+                $gte: threeDay,
+                $lte: today,
+              },
+              title: {
+                $regex: req.body.filterCondition.searchWord,
+                $options: "i",
+              },
+              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
+            },
+          },
+          {
+            $sort: {
+              date: -1,
+            },
+          },
+          {
+            $skip: req.body.filterCondition.currentPage,
+          },
+          {
+            $limit: req.body.filterCondition.perpage,
+          },
+        ]);
+        res.status(200).json({ total, allDb });
+      } else {
+        console.log("req.body.filterCondition.category------->" , req.body.filterCondition.category)
+        const total = await Products.aggregate([
+          {
+            $match: {
+              delete: false,
+              category: mongoose.Types.ObjectId(
+                req.body.filterCondition.category
+              ),
+              // favourite:req.body.filterCondition.favourite,
+              price: {
+                $gte: 1 * req.body.filterCondition.lowerPrice,
+                $lte: 1 * req.body.filterCondition.upperPrice,
+              },
+              title: {
+                $regex: req.body.filterCondition.searchWord,
+                $options: "i",
+              },
+              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
+            },
+          },
+          {
+            $count: "total",
+          },
+        ]);
+        const allDb = await Products.aggregate([
+          {
+            $match: {
+              delete: false,
+              category: mongoose.Types.ObjectId(
+                req.body.filterCondition.category
+              ),
+              // favourite:req.body.filterCondition.favourite,
+              price: {
+                $gte: 1 * req.body.filterCondition.lowerPrice,
+                $lte: 1 * req.body.filterCondition.upperPrice,
+              },
+              title: {
+                $regex: req.body.filterCondition.searchWord,
+                $options: "i",
+              },
+              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
+            },
+          },
+          {
+            $sort: {
+              date: -1,
+            },
+          },
+          {
+            $skip: req.body.filterCondition.currentPage,
+          },
+          {
+            $limit: req.body.filterCondition.perpage,
+          },
+        ]);
+        res.status(200).json({ total, allDb });
+      }
+    } else {
+      if (req.body.filterCondition.onlyNew == true) {
+        const total = await Products.aggregate([
+          {
+            $match: {
+              delete: false,
+              // favourite:req.body.filterCondition.favourite,
+              price: {
+                $gte: 1 * req.body.filterCondition.lowerPrice,
+                $lte: 1 * req.body.filterCondition.upperPrice,
+              },
+              date: {
+                $gte: threeDay,
+                $lte: today,
+              },
+              title: {
+                $regex: req.body.filterCondition.searchWord,
+                $options: "i",
+              },
+              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
+            },
+          },
+          {
+            $count: "total",
+          },
+        ]);
+        const allDb = await Products.aggregate([
+          {
+            $match: {
+              delete: false,
+              // favourite:req.body.filterCondition.favourite,
+              price: {
+                $gte: 1 * req.body.filterCondition.lowerPrice,
+                $lte: 1 * req.body.filterCondition.upperPrice,
+              },
+              date: {
+                $gte: threeDay,
+                $lte: today,
+              },
+              title: {
+                $regex: req.body.filterCondition.searchWord,
+                $options: "i",
+              },
+              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
+            },
+          },
+          {
+            $sort: {
+              date: -1,
+            },
+          },
+          {
+            $skip: req.body.filterCondition.currentPage,
+          },
+          {
+            $limit: req.body.filterCondition.perpage,
+          },
+        ]);
+
+        res.status(200).json({ total, allDb });
+      } else {
+        const total = await Products.aggregate([
+          {
+            $match: {
+              delete: false,
+              // favourite:req.body.filterCondition.favourite,
+              price: {
+                $gte: 1 * req.body.filterCondition.lowerPrice,
+                $lte: 1 * req.body.filterCondition.upperPrice,
+              },
+              title: {
+                $regex: req.body.filterCondition.searchWord,
+                $options: "i",
+              },
+
+              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
+            },
+          },
+          {
+            $count: "total",
+          },
+        ]);
+        const allDb = await Products.aggregate([
+          {
+            $match: {
+              delete: false,
+              // favourite:req.body.filterCondition.favourite,
+              price: {
+                $gte: 1 * req.body.filterCondition.lowerPrice,
+                $lte: 1 * req.body.filterCondition.upperPrice,
+              },
+              title: {
+                $regex: req.body.filterCondition.searchWord,
+                $options: "i",
+              },
+              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
+            },
+          },
+          {
+            $sort: {
+              date: -1,
+            },
+          },
+          {
+            $skip: req.body.filterCondition.currentPage,
+          },
+          {
+            $limit: req.body.filterCondition.perpage,
+          },
+        ]);
+
+        res.status(200).json({ total, allDb });
+      }
+    }
+  } catch (error) {
+    console.log(error);
   }
 };

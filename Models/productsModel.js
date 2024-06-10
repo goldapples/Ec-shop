@@ -41,6 +41,10 @@ const productsSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    favourite: {
+      type:Boolean,
+      default: false
+    },
     date: {
       type: Date,
       default: Date.now(),
