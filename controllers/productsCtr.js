@@ -130,7 +130,6 @@ exports.update = async (req, res) => {
 };
 
 exports.getAllByGuest = async (req, res) => {
-  // console.log("fdsf", req.body.filterCondition);
   try {
     if (req.body.filterCondition.category != "All") {
       if (req.body.filterCondition.onlyNew == true) {
