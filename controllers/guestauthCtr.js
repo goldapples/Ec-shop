@@ -306,28 +306,69 @@ exports.delete = async (req, res) => {
 };
 exports.update = async (req, res) => {
   try {
-    const user = await User.findOne({ _id: req.body._id });
-    if (!user)
-      return res.status(500).send({ message: "User does not exists." });
+    const guest = await Guest.findOne({ _id: req.body._id });
+    if (!guest)
+      return res.status(500).send({ message: "Guest does not exists." });
 
     if (req.body.newPassword !== "") {
-      const isMatch = await bcrypt.compare(req.body.password, user.password);
+      const isMatch = await bcrypt.compare(req.body.password, guest.password);
       if (!isMatch)
         return res.status(500).json({ message: "Password is not correct!" });
 
       const salt = await bcrypt.genSalt(10);
       req.body.password = await bcrypt.hash(req.body.newPassword, salt);
     } else {
-      req.body.password = user.password;
+      req.body.password = guest.password;
 
-      await User.findByIdAndUpdate({ _id: req.body._id }, { ...req.body });
-      const newUser = await User.findOne({ _id: req.body._id });
-      return res.status(200).json({ message: "Successful!", data: newUser });
+      await Guest.findByIdAndUpdate({ _id: req.body._id }, { ...req.body });
+      const newGuest = await Guest.findOne({ _id: req.body._id });
+      return res.status(200).json({ message: "Successful!", data: newGuest });
     }
   } catch (error) {
     return res.json({ message: error.message });
   }
 };
+
+exports.shippingupdate = async (req, res) => {
+  console.log("============shipping", req.body);
+  try {
+    const guest = await Guest.findOne({ _id: req.body._id });
+    if (!guest)
+      return res.status(500).send({ message: "Guest does not exists." });
+      await Guest.findByIdAndUpdate({ _id: req.body._id }, { ...req.body });
+      const newGuest = await Guest.findOne({ _id: req.body._id });
+      return res.status(200).json({ message: "Successful!", data: newGuest });
+
+  } catch (error) {
+    return res.json({ message: error.message });
+  }
+};
+
+// exports.updateShipping = async (req, res) => {
+//   try {
+//     const guest = req.user
+//     console.log('guest', guest)
+//     if (!guest)
+//       return res.status(500).send({ message: "Guest does not exists." });
+
+//     if (req.body.newPassword !== "") {
+//       const isMatch = await bcrypt.compare(req.body.password, guest.password);
+//       if (!isMatch)
+//         return res.status(500).json({ message: "Password is not correct!" });
+
+//       const salt = await bcrypt.genSalt(10);
+//       req.body.password = await bcrypt.hash(req.body.newPassword, salt);
+//     } else {
+//       req.body.password = guest.password;
+
+//       await Guest.findByIdAndUpdate({ _id: req.body._id }, { ...req.body });
+//       const newGuest = await Guest.findOne({ _id: req.body._id });
+//       return res.status(200).json({ message: "Successful!", data: newGuest });
+//     }
+//   } catch (error) {
+//     return res.json({ message: error.message });
+//   }
+// };
 
 exports.updateput = async (req, res) => {
   try {
