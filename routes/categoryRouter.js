@@ -7,9 +7,10 @@ const categoryController = require("../controllers/categoryCtr");
 router.post("/category/new", requireAuth, categoryController.createCategory);
 router.post("/category/newChildren", requireAuth, categoryController.newChildrenCategory);
 router.get("/category/categorylist",  categoryController.getAllCategories);
+router.get("/category/categorylistbyguest", categoryController.getAllCategoriesByGuest);
 router.put("/category/:id", requireAuth, categoryController.editCategory);
 router.delete("/category/delete", requireAuth, categoryController.deleteCategory);
 router.get("/category/:id", requireAuth, categoryController.getACategory);
-router.delete("/category/mutidelete", requireAuth, categoryController.multiDeleteCategory)
+router.delete("/category/mutidelete", requireAuth, categoryController.multiDeleteCategory);
 
 module.exports = router;

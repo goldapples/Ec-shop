@@ -1,32 +1,54 @@
-
 const { Schema, model } = require("mongoose");
 const { modelOption } = require("./config");
 const cartSchema = new Schema(
-  {
-
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: "Guest"
+    {
+        user: {
+            type: Schema.Types.ObjectId,
+            ref: "Guest"
+        },
+        products: [{
+            product: {
+                type: Schema.Types.ObjectId,
+                ref: "Products"
+            },
+            quantity: {
+                type: Number,
+            },
+            delete:{
+                type:Boolean,
+                default:false
+            }
+        }],
+        shipping: [{
+            country: {
+                type: String
+            },
+            prefacture: {
+                type: String
+            },
+            city: {
+                type: String
+            },
+            apartment:{
+                type:String
+            },
+            roomNumber: {
+                type: Number
+            }
+        }],
+        store:{
+            type: Schema.Types.ObjectId,
+            ref: "Store"
+        },
+        wallet: {
+            type: String
+        },
+        delete: {
+            type: Boolean,
+            default: false
+        }
     },
-    products: [{
-      product: {
-        type: Schema.Types.ObjectId,
-        ref: "Products"
-      },
-      quantity: {
-        type: Number
-      },
-      delete: {
-        type: Boolean,
-        default: false
-      }
-    }],
-    delete: {
-      type: Boolean,
-      default: false
-    }
-  },
-  modelOption("Cart")
+    modelOption("Cart")
 );
 
 module.exports = model("Cart", cartSchema);
