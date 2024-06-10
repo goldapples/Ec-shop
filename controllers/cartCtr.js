@@ -89,93 +89,83 @@ exports.getAllCarts = async (req, res) => {
             })
         }
         if (searchWord === "") {
-            const carts = await Cart.aggregate([
-                {
-                    $match: {
-                        user: ObjectId(req.user._id)
+        const carts = await Cart.aggregate([
+            { $match: { user: ObjectId(req.user._id) } },
+            { $project: { products: 1, } },
+            { $unwind: { path: "$products", preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: "products.product",
+                    foreignField: "_id",
+                    as: "product",
+                }
+            },
+            {
+                $project: {
+                    real_product: "$product",
+                    quantity: "$products.quantity"
+                }
+            },
+            {
+                $unwind: {
+                    path: "$real_product", preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $lookup: {
+                    from: 'category',
+                    localField: "real_product.category",
+                    foreignField: "_id",
+                    as: "category",
+                }
+            },
+            {
+                $unwind: {
+                    path: "$category", preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $project: {
+                    title: "$real_product.title",
+                    files: "$real_product.files",
+                    price: "$real_product.price",
+                    quantity: "$quantity",
+                    category: "$category.title"
+                }
+            },
+            {
+                $addFields: {
+                    totalPrice: {
+                        $sum: { $multiply: ["$price", "$quantity"] },
                     }
-                },
-                {
-                    $project: {
-                        products: 1,
-                    }
-                },
-                {
-                    $unwind: {
-                        path: "$products", preserveNullAndEmptyArrays: true
-                    }
-                },
-                {
-                    $lookup: {
-                        from: 'products',
-                        localField: "products.product",
-                        foreignField: "_id",
-                        as: "product",
-                    }
-                },
-                {
-                    $project: {
-                        real_product: "$product",
-                        quantity: "$products.quantity"
-                    }
-                },
-                {
-                    $unwind: {
-                        path: "$real_product", preserveNullAndEmptyArrays: true
-                    }
-                },
-                {
-                    $lookup: {
-                        from: 'category',
-                        localField: "real_product.category",
-                        foreignField: "_id",
-                        as: "category",
-                    }
-                },
-                {
-                    $unwind: {
-                        path: "$category", preserveNullAndEmptyArrays: true
-                    }
-                },
-                {
-                    $project: {
-                        title: "$real_product.title",
-                        files: "$real_product.files",
-                        price: "$real_product.price",
-                        quantity: "$quantity",
-                        category: "$category.title"
-                    }
-                },
-                {
-                    $addFields: {
-                        totalPrice: {
-                            $sum: { $multiply: ["$price", "$quantity"] },
-                        }
-                    }
-                },
-            ]);
-            const length = carts.length;
-            if (length === 0) { return res.status(404).json({ type: "error", message: "No products" }) }
+                }
+            },
+        ]);
+        const length = carts.length;
+        if (length === 0) { return res.status(404).json({ type: "error", message: "No products" }) }
 
-            return res.status(200).json({
-                type: "success",
-                message: "success",
-                result: carts.slice((pn - 1) * ps, pn * ps),
-                length: length
-            })
+        return res.status(200).json({
+            type: "success",
+            message: "success",
+            result: carts.slice((pn - 1) * ps, pn * ps),
+            length: length
+        })
         }
     } catch (err) {
-        console.log("===========>", err)
         res.status(400).json({ type: "error", message: err.message })
     }
 };
 
 exports.deleteACart = async (req, res) => {
-    console.log(req.params);
-    // const result = await Cart.aggregate([
-    //     { $match: { user: req.user._id } },
-    //     {}
-    // ])
+    const result = await Cart.findOneAndUpdate(
+        { _id: ObjectId(req.user._id), 'products.product': ObjectId(req.params) },
+        {
+            $set: {
+                'products.$.delete': true,
+            }
+        }
+    )
 };
 
 exports.addAProduct = async (req, res) => {
@@ -236,7 +226,6 @@ exports.addAProduct = async (req, res) => {
             }
         }
     } catch (error) {
-        console.log("error-->", error.message);
         res.json({ type: "error", message: error.message });
     }
 };
@@ -256,17 +245,14 @@ exports.addShipping = async (req, res) => {
     catch (error) {
         res.json({ type: "error", message: error.message })
     }
-}
+};
 
 exports.addWallet = async (req, res) => {
     try {
         let receivedWallet = req.body.sendAddress;
         const user = await Cart.findOne({ user: req.user._id });
         if (user) {
-            const wallet = await Cart.updateOne(
-                { user: req.user._id },
-                { $set: { wallet: receivedWallet } }
-            )
+            const wallet = await Cart.updateOne({ user: req.user._id }, { $set: { wallet: receivedWallet } })
         }
         const newOrder = await new Order({
             user: user.user,
@@ -278,8 +264,8 @@ exports.addWallet = async (req, res) => {
         await newOrder.save()
             .then(res.json({ type: "success", message: "Success" }))
             .catch((err) => { res.status(500).json({ type: "error", message: err.message }) });
-        await Cart.findOneAndDelete({user:req.user._id});
+        await Cart.updateOne({ user: req.user._id }, { $set: { delete: true } })
     } catch (error) {
         res.json({ type: "error", message: error.message })
     }
-}
+};

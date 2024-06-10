@@ -33,7 +33,6 @@ exports.create = async (req, res) => {
         );
     });
   } catch (error) {
-    console.log("errr");
     return await res
       .status(500)
       .json({ type: "error", message: error.message });
