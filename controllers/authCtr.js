@@ -395,16 +395,18 @@ exports.favourite = async (req, res) => {
         { _id: req.user._id },
         { $pull: { favourite: req.body.productId } }
       );
+      const favouriteList = await Guest.findOne({ _id: req.user._id,})
       res.status(200).json({
-        message: `remove favourite successfully.`,
+        message: `remove favourite successfully.`,favouriteList
       });
     } else {
       await Guest.update(
         { _id: req.user._id },
         { $push: { favourite: req.body.productId } }
       );
+      const favouriteList = await Guest.findOne({ _id: req.user._id,})
       res.status(200).json({
-        message: `add favourite product successfully.`,
+        message: `add favourite product successfully.`, favouriteList
       });
     }
   } catch (error) {
