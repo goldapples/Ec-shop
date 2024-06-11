@@ -8,5 +8,6 @@ router.delete("/cart/deleteACart/:id", requireAuth, cartCtr.deleteACart);
 router.post("/cart/addAProduct", requireAuth, cartCtr.addAProduct);
 router.post("/cart/addShipping", requireAuth, cartCtr.addShipping);
 router.post("/cart/addWallet", requireAuth, cartCtr.addWallet)
+router.get("/cart/getallbyuser", requireAuth, cartCtr.getAllByUser)
 
 module.exports = router;
