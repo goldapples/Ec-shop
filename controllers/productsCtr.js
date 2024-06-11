@@ -196,7 +196,7 @@ exports.getAllByGuest = async (req, res) => {
         ]);
         res.status(200).json({ total, allDb });
       } else {
-        console.log("req.body.filterCondition.category------->" , req.body.filterCondition.category)
+        console.log("req.body.filterCondition.category------->", req.body.filterCondition.category)
         const total = await Products.aggregate([
           {
             $match: {
@@ -371,3 +371,12 @@ exports.getAllByGuest = async (req, res) => {
     console.log(error);
   }
 };
+
+exports.getAProduct = async (req, res) => {
+  try {
+    const product = await Products.findById(req.params.id);
+    res.status(200).json({ type: "success", message: "Get A product data successfully!", product: product });
+  } catch (err) {
+    res.status(200).json({type:"error", message:err.message})
+  }
+}
