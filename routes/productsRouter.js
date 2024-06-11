@@ -12,4 +12,5 @@ router.delete("/products/delete/:id", requireAuth, ProductsCtr.delete);
 router.put("/products/update/:id", requireAuth, ProductsCtr.update);
 router.get("/products/getAProduct/:id", ProductsCtr.getAProduct)
 
+
 module.exports = router;
