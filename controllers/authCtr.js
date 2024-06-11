@@ -380,3 +380,33 @@ exports.logout = async (req, res) => {
     });
   });
 };
+
+
+exports.favourite = async (req, res) => {
+  console.log(req.body, req.user)
+  try {
+    const favourite = await Guest.findOne({
+      _id: req.user._id,
+      favourite: { $elemMatch: { $eq: req.body.productId } },
+    });
+    if (favourite) {
+      await Guest.update(
+        { _id: req.user._id },
+        { $pull: { favourite: req.body.productId } }
+      );
+      res.status(200).json({
+        message: `remove favourite successfully.`,
+      });
+    } else {
+      await Guest.update(
+        { _id: req.user._id },
+        { $push: { favourite: req.body.productId } }
+      );
+      res.status(200).json({
+        message: `add favourite product successfully.`,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

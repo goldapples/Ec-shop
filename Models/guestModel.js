@@ -51,6 +51,10 @@ const guestSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    favourite: [{
+      type: Schema.Types.ObjectId,
+      ref: "Product",
+    }],
   },
   modelOption("guest")
 );

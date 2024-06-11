@@ -11,4 +11,5 @@ router.get("/products/images", requireAuth, ProductsCtr.images);
 router.delete("/products/delete/:id", requireAuth, ProductsCtr.delete);
 router.put("/products/update/:id", requireAuth, ProductsCtr.update);
 
+
 module.exports = router;
