@@ -38,7 +38,6 @@ exports.create = async (req, res) => {
         );
     });
   } catch (error) {
-    console.log("errr");
     return await res
       .status(500)
       .json({ type: "error", message: error.message });
@@ -239,3 +238,12 @@ exports.getAllByGuest = async (req, res) => {
     console.log(error);
   }
 };
+
+exports.getAProduct = async (req, res) => {
+  try {
+    const product = await Products.findById(req.params.id);
+    res.status(200).json({ type: "success", message: "Get A product data successfully!", product: product });
+  } catch (err) {
+    res.status(200).json({type:"error", message:err.message})
+  }
+}
