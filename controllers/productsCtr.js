@@ -1,10 +1,6 @@
 const Products = require("../Models/productsModel");
 const Role = require("../Models/roleModel");
-const File = require("../Models/fileModel");
 const mongoose = require("mongoose");
-const dayjs = require("dayjs");
-const productSalesModel = require("../Models/productSalesModel");
-const { sales } = require("./productInventoryCtr");
 const categoryModel = require("../Models/categoryModel");
 const guestModel = require("../Models/guestModel");
 
@@ -308,8 +304,14 @@ exports.getAllByGuest = async (req, res) => {
 exports.getAProduct = async (req, res) => {
   try {
     const product = await Products.findById(req.params.id);
-    res.status(200).json({ type: "success", message: "Get A product data successfully!", product: product });
+    res
+      .status(200)
+      .json({
+        type: "success",
+        message: "Get A product data successfully!",
+        product: product,
+      });
   } catch (err) {
-    res.status(200).json({type:"error", message:err.message})
+    res.status(200).json({ type: "error", message: err.message });
   }
-}
+};

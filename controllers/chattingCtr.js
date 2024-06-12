@@ -1,4 +1,4 @@
-const ChatUser = require("../Models/chattingModel");
+const ChatUser = require("../Models/ChattingModel");
 
 exports.getAllChatMsgs = async (req, res) => {
   ChatUser.find().then((user) => {
