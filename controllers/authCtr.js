@@ -4,7 +4,6 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const config = require("../config/config");
 const passport = require("passport");
-
 exports.register = async (req, res) => {
   try {
     if (req.body.guest) {
@@ -82,7 +81,7 @@ exports.login = async (req, res) => {
               name: user.name,
               password: user.password,
               avatar: user.avatar,
-              guest:true
+              guest: true
             };
             jwt.sign(
               payload,
@@ -165,81 +164,81 @@ exports.login = async (req, res) => {
 };
 exports.tokenlogin = async (req, res) => {
   try {
-    
+
     // guset mothod
     if (req.user.guest) {
       await Guest.findById({ _id: req.user.id })
-    .then(async (user) => {
-      if (!user) {
-        return res
-          .status(400)
-          .json({ type: "error", message: "You are not registered" });
-      }
-      const payload = {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        password: user.password,
-        avatar: user?.avatar,
-        guest: true
-      };
-      jwt.sign(
-        payload,
-        config.secretOrKey,
-        { expiresIn: config.expireIn },
-        (err, token) => {
-          if (err) return res.status(500).json({type: 'error', message: err.message });
-          return res.json({
-            type: 'success',
-            message: "Success",
-            token: "Bearer " + token,
-            user: user,
-          });
-        }
-      );
-    });
-    } 
+        .then(async (user) => {
+          if (!user) {
+            return res
+              .status(400)
+              .json({ type: "error", message: "You are not registered" });
+          }
+          const payload = {
+            id: user._id,
+            email: user.email,
+            name: user.name,
+            password: user.password,
+            avatar: user?.avatar,
+            guest: true
+          };
+          jwt.sign(
+            payload,
+            config.secretOrKey,
+            { expiresIn: config.expireIn },
+            (err, token) => {
+              if (err) return res.status(500).json({ type: 'error', message: err.message });
+              return res.json({
+                type: 'success',
+                message: "Success",
+                token: "Bearer " + token,
+                user: user,
+              });
+            }
+          );
+        });
+    }
     //manager method
     else {
       await User.findById({ _id: req.user.id })
-    .populate({ path: "role store", select: "title" })
-    .then(async (user) => {
-      if (!user) {
-        return res
-          .status(400)
-          .json({ type: "error", message: "You are not registered" });
-      }
-      if (!user.allow) {
-        return res
-          .status(400)
-          .json({ type: "error", message: "You are not allowed" });
-      }
-      const payload = {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        password: user.password,
-        avatar: user?.avatar,
-        role: user?.role?.title,
-      };
-      jwt.sign(
-        payload,
-        config.secretOrKey,
-        { expiresIn: 3600 },
-        (err, token) => {
-          if (err) return res.status(500).json({type: 'error', message: err.message });
-          return res.json({
-            type: 'success',
-            message: "Success",
-            token: "Bearer " + token,
-            user: user,
-          });
-        }
-      );
-    });
+        .populate({ path: "role store", select: "title" })
+        .then(async (user) => {
+          if (!user) {
+            return res
+              .status(400)
+              .json({ type: "error", message: "You are not registered" });
+          }
+          if (!user.allow) {
+            return res
+              .status(400)
+              .json({ type: "error", message: "You are not allowed" });
+          }
+          const payload = {
+            id: user._id,
+            email: user.email,
+            name: user.name,
+            password: user.password,
+            avatar: user?.avatar,
+            role: user?.role?.title,
+          };
+          jwt.sign(
+            payload,
+            config.secretOrKey,
+            { expiresIn: 3600 },
+            (err, token) => {
+              if (err) return res.status(500).json({ type: 'error', message: err.message });
+              return res.json({
+                type: 'success',
+                message: "Success",
+                token: "Bearer " + token,
+                user: user,
+              });
+            }
+          );
+        });
     }
   } catch (error) {
-    return res.json({type: 'error', message: error.message})
+    return res.json({ type: 'error', message: error.message })
   }
 };
 // exports.tokenlogin = async (req, res) => {
@@ -394,16 +393,18 @@ exports.favourite = async (req, res) => {
         { _id: req.user._id },
         { $pull: { favourite: req.body.productId } }
       );
+      const favouriteList = await Guest.findOne({ _id: req.user._id,})
       res.status(200).json({
-        message: `remove favourite successfully.`,
+        message: `remove favourite successfully.`,favouriteList
       });
     } else {
       await Guest.update(
         { _id: req.user._id },
         { $push: { favourite: req.body.productId } }
       );
+      const favouriteList = await Guest.findOne({ _id: req.user._id,})
       res.status(200).json({
-        message: `add favourite product successfully.`,
+        message: `add favourite product successfully.`, favouriteList
       });
     }
   } catch (error) {

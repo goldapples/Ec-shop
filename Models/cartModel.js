@@ -48,7 +48,7 @@ const cartSchema = new Schema(
             default: false
         }
     },
-    modelOption("Cart")
+    modelOption("cart")
 );
 
 module.exports = model("Cart", cartSchema);
