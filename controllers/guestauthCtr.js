@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const config = require("../config/config");
 const passport = require("passport");
+
 exports.register = async (req, res) => {
   try {
     if (req.body.guest) {
@@ -81,7 +82,7 @@ exports.login = async (req, res) => {
               name: user.name,
               password: user.password,
               avatar: user.avatar,
-              guest: true
+              guest:true
             };
             jwt.sign(
               payload,
@@ -164,81 +165,81 @@ exports.login = async (req, res) => {
 };
 exports.tokenlogin = async (req, res) => {
   try {
-
+    
     // guset mothod
     if (req.user.guest) {
       await Guest.findById({ _id: req.user.id })
-        .then(async (user) => {
-          if (!user) {
-            return res
-              .status(400)
-              .json({ type: "error", message: "You are not registered" });
-          }
-          const payload = {
-            id: user._id,
-            email: user.email,
-            name: user.name,
-            password: user.password,
-            avatar: user?.avatar,
-            guest: true
-          };
-          jwt.sign(
-            payload,
-            config.secretOrKey,
-            { expiresIn: config.expireIn },
-            (err, token) => {
-              if (err) return res.status(500).json({ type: 'error', message: err.message });
-              return res.json({
-                type: 'success',
-                message: "Success",
-                token: "Bearer " + token,
-                user: user,
-              });
-            }
-          );
-        });
-    }
+    .then(async (user) => {
+      if (!user) {
+        return res
+          .status(400)
+          .json({ type: "error", message: "You are not registered" });
+      }
+      const payload = {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        password: user.password,
+        avatar: user?.avatar,
+        guest: true
+      };
+      jwt.sign(
+        payload,
+        config.secretOrKey,
+        { expiresIn: config.expireIn },
+        (err, token) => {
+          if (err) return res.status(500).json({type: 'error', message: err.message });
+          return res.json({
+            type: 'success',
+            message: "Success",
+            token: "Bearer " + token,
+            user: user,
+          });
+        }
+      );
+    });
+    } 
     //manager method
     else {
       await User.findById({ _id: req.user.id })
-        .populate({ path: "role store", select: "title" })
-        .then(async (user) => {
-          if (!user) {
-            return res
-              .status(400)
-              .json({ type: "error", message: "You are not registered" });
-          }
-          if (!user.allow) {
-            return res
-              .status(400)
-              .json({ type: "error", message: "You are not allowed" });
-          }
-          const payload = {
-            id: user._id,
-            email: user.email,
-            name: user.name,
-            password: user.password,
-            avatar: user?.avatar,
-            role: user?.role?.title,
-          };
-          jwt.sign(
-            payload,
-            config.secretOrKey,
-            { expiresIn: 3600 },
-            (err, token) => {
-              if (err) return res.status(500).json({ type: 'error', message: err.message });
-              return res.json({
-                type: 'success',
-                message: "Success",
-                token: "Bearer " + token,
-                user: user,
-              });
-            }
-          );
-        });
+    .populate({ path: "role store", select: "title" })
+    .then(async (user) => {
+      if (!user) {
+        return res
+          .status(400)
+          .json({ type: "error", message: "You are not registered" });
+      }
+      if (!user.allow) {
+        return res
+          .status(400)
+          .json({ type: "error", message: "You are not allowed" });
+      }
+      const payload = {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        password: user.password,
+        avatar: user?.avatar,
+        role: user?.role?.title,
+      };
+      jwt.sign(
+        payload,
+        config.secretOrKey,
+        { expiresIn: 3600 },
+        (err, token) => {
+          if (err) return res.status(500).json({type: 'error', message: err.message });
+          return res.json({
+            type: 'success',
+            message: "Success",
+            token: "Bearer " + token,
+            user: user,
+          });
+        }
+      );
+    });
     }
   } catch (error) {
-    return res.json({ type: 'error', message: error.message })
+    return res.json({type: 'error', message: error.message})
   }
 };
 // exports.tokenlogin = async (req, res) => {
@@ -305,28 +306,69 @@ exports.delete = async (req, res) => {
 };
 exports.update = async (req, res) => {
   try {
-    const user = await User.findOne({ _id: req.body._id });
-    if (!user)
-      return res.status(500).send({ message: "User does not exists." });
+    const guest = await Guest.findOne({ _id: req.body._id });
+    if (!guest)
+      return res.status(500).send({ message: "Guest does not exists." });
 
     if (req.body.newPassword !== "") {
-      const isMatch = await bcrypt.compare(req.body.password, user.password);
+      const isMatch = await bcrypt.compare(req.body.password, guest.password);
       if (!isMatch)
         return res.status(500).json({ message: "Password is not correct!" });
 
       const salt = await bcrypt.genSalt(10);
       req.body.password = await bcrypt.hash(req.body.newPassword, salt);
     } else {
-      req.body.password = user.password;
+      req.body.password = guest.password;
 
-      await User.findByIdAndUpdate({ _id: req.body._id }, { ...req.body });
-      const newUser = await User.findOne({ _id: req.body._id });
-      return res.status(200).json({ message: "Successful!", data: newUser });
+      await Guest.findByIdAndUpdate({ _id: req.body._id }, { ...req.body });
+      const newGuest = await Guest.findOne({ _id: req.body._id });
+      return res.status(200).json({ message: "Successful!", data: newGuest });
     }
   } catch (error) {
     return res.json({ message: error.message });
   }
 };
+
+exports.shippingupdate = async (req, res) => {
+  console.log("============shipping", req.body);
+  try {
+    const guest = await Guest.findOne({ _id: req.body._id });
+    if (!guest)
+      return res.status(500).send({ message: "Guest does not exists." });
+      await Guest.findByIdAndUpdate({ _id: req.body._id }, { ...req.body });
+      const newGuest = await Guest.findOne({ _id: req.body._id });
+      return res.status(200).json({ message: "Successful!", data: newGuest });
+
+  } catch (error) {
+    return res.json({ message: error.message });
+  }
+};
+
+// exports.updateShipping = async (req, res) => {
+//   try {
+//     const guest = req.user
+//     console.log('guest', guest)
+//     if (!guest)
+//       return res.status(500).send({ message: "Guest does not exists." });
+
+//     if (req.body.newPassword !== "") {
+//       const isMatch = await bcrypt.compare(req.body.password, guest.password);
+//       if (!isMatch)
+//         return res.status(500).json({ message: "Password is not correct!" });
+
+//       const salt = await bcrypt.genSalt(10);
+//       req.body.password = await bcrypt.hash(req.body.newPassword, salt);
+//     } else {
+//       req.body.password = guest.password;
+
+//       await Guest.findByIdAndUpdate({ _id: req.body._id }, { ...req.body });
+//       const newGuest = await Guest.findOne({ _id: req.body._id });
+//       return res.status(200).json({ message: "Successful!", data: newGuest });
+//     }
+//   } catch (error) {
+//     return res.json({ message: error.message });
+//   }
+// };
 
 exports.updateput = async (req, res) => {
   try {
@@ -378,36 +420,4 @@ exports.logout = async (req, res) => {
       user: user,
     });
   });
-};
-
-
-exports.favourite = async (req, res) => {
-  console.log(req.body, req.user)
-  try {
-    const favourite = await Guest.findOne({
-      _id: req.user._id,
-      favourite: { $elemMatch: { $eq: req.body.productId } },
-    });
-    if (favourite) {
-      await Guest.update(
-        { _id: req.user._id },
-        { $pull: { favourite: req.body.productId } }
-      );
-      const favouriteList = await Guest.findOne({ _id: req.user._id,})
-      res.status(200).json({
-        message: `remove favourite successfully.`,favouriteList
-      });
-    } else {
-      await Guest.update(
-        { _id: req.user._id },
-        { $push: { favourite: req.body.productId } }
-      );
-      const favouriteList = await Guest.findOne({ _id: req.user._id,})
-      res.status(200).json({
-        message: `add favourite product successfully.`, favouriteList
-      });
-    }
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
 };

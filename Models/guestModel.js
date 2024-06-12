@@ -15,6 +15,9 @@ const guestSchema = new Schema(
       type: String,
       required: true,
     },
+    gender: {
+      type: String,
+    },
     bio: {
       type: String,
     },
@@ -30,6 +33,9 @@ const guestSchema = new Schema(
         default: "user",
       },
     ],
+    note: {
+      type: String,
+    },
     shipping: {
         country: String,
         prefecture: String,
