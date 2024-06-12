@@ -5,10 +5,11 @@ const requireAuth = passport.authenticate("jwt", { session: false });
 const categoryController = require("../controllers/categoryCtr");
 
 router.post("/category/new", requireAuth, categoryController.createCategory);
+router.post("/category/newChildren", requireAuth, categoryController.newChildrenCategory);
+router.get("/category/categorylist",  categoryController.getAllCategories);
 router.get("/category/categorylistbyguest", categoryController.getAllCategoriesByGuest);
-router.get("/category/categorylist", requireAuth, categoryController.getAllCategories);
 router.put("/category/:id", requireAuth, categoryController.editCategory);
-router.delete("/category/:id", requireAuth, categoryController.deleteCategory);
+router.delete("/category/delete", requireAuth, categoryController.deleteCategory);
 router.get("/category/:id", requireAuth, categoryController.getACategory);
 router.delete("/category/mutidelete", requireAuth, categoryController.multiDeleteCategory);
 

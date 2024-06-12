@@ -1,12 +1,8 @@
 const Products = require("../Models/productsModel");
 const Role = require("../Models/roleModel");
-const File = require("../Models/fileModel");
 const mongoose = require("mongoose");
-const dayjs = require("dayjs");
-const productSalesModel = require("../Models/productSalesModel");
-const { sales } = require("./productInventoryCtr");
 const categoryModel = require("../Models/categoryModel");
-const productsModel = require("../Models/productsModel");
+const guestModel = require("../Models/guestModel");
 
 exports.create = async (req, res) => {
   try {
@@ -52,7 +48,7 @@ exports.getAll = async (req, res) => {
       const allDb = await Products.find({
         delete: false,
       }).sort({
-        updatedAt: -1,
+        date: -1,
       });
       res.status(200).json({ allDb });
     } else {
@@ -132,8 +128,11 @@ exports.update = async (req, res) => {
 
 exports.getAllByGuest = async (req, res) => {
   const byOrder = req.body.filterCondition.order;
-
+  const favourite = req.body.filterCondition.favourite;
   try {
+    const favouriteProductId = await guestModel.findOne({
+      _id: req.body.filterCondition.userId,
+    });
     const idPath = await categoryModel.aggregate([
       {
         $match: {
@@ -148,23 +147,44 @@ exports.getAllByGuest = async (req, res) => {
     const total = await Products.aggregate([
       {
         $match: {
-          delete: false,
-          category: {
-            $in: idPath && idPath.map((item) => mongoose.Types.ObjectId(item._id)),
-          },
-          // favourite:req.body.filterCondition.favourite,
-          priceoff: {
-            $gte: 1 * req.body.filterCondition.lowerPrice,
-            $lte: 1 * req.body.filterCondition.upperPrice,
-          },
-          date: {
-            $gte: new Date(req.body.filterCondition.sDate),
-            $lte: new Date(req.body.filterCondition.today),
-          },
-          title: {
-            $regex: req.body.filterCondition.searchWord,
-            $options: "i",
-          },
+          $and: [
+            { delete: false },
+            {
+              category: {
+                $in:
+                  idPath &&
+                  idPath.map((item) => mongoose.Types.ObjectId(item._id)),
+              },
+            },
+            // favourite:req.body.filterCondition.favourite,
+            {
+              priceoff: {
+                $gte: 1 * req.body.filterCondition.lowerPrice,
+                $lte: 1 * req.body.filterCondition.upperPrice,
+              },
+            },
+            {
+              date: {
+                $gte: new Date(req.body.filterCondition.sDate),
+                $lte: new Date(req.body.filterCondition.today),
+              },
+            },
+            {
+              title: {
+                $regex: req.body.filterCondition.searchWord,
+                $options: "i",
+              },
+            },
+            favourite == true
+              ? {
+                  _id: {
+                    $in: favouriteProductId?.favourite.map((item) =>
+                      mongoose.Types.ObjectId(item)
+                    ),
+                  },
+                }
+              : {},
+          ],
 
           // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
         },
@@ -177,23 +197,44 @@ exports.getAllByGuest = async (req, res) => {
     const allDb = await Products.aggregate([
       {
         $match: {
-          delete: false,
-          category: {
-            $in: idPath && idPath.map((item) => mongoose.Types.ObjectId(item._id)),
-          },
-          // favourite:req.body.filterCondition.favourite,
-          priceoff: {
-            $gte: 1 * req.body.filterCondition.lowerPrice,
-            $lte: 1 * req.body.filterCondition.upperPrice,
-          },
-          date: {
-            $gte: new Date(req.body.filterCondition.sDate),
-            $lte: new Date(req.body.filterCondition.today),
-          },
-          title: {
-            $regex: req.body.filterCondition.searchWord,
-            $options: "i",
-          },
+          $and: [
+            { delete: false },
+            {
+              category: {
+                $in:
+                  idPath &&
+                  idPath.map((item) => mongoose.Types.ObjectId(item._id)),
+              },
+            },
+            // favourite:req.body.filterCondition.favourite,
+            {
+              priceoff: {
+                $gte: 1 * req.body.filterCondition.lowerPrice,
+                $lte: 1 * req.body.filterCondition.upperPrice,
+              },
+            },
+            {
+              date: {
+                $gte: new Date(req.body.filterCondition.sDate),
+                $lte: new Date(req.body.filterCondition.today),
+              },
+            },
+            {
+              title: {
+                $regex: req.body.filterCondition.searchWord,
+                $options: "i",
+              },
+            },
+            favourite == true
+              ? {
+                  _id: {
+                    $in: favouriteProductId?.favourite.map((item) =>
+                      mongoose.Types.ObjectId(item)
+                    ),
+                  },
+                }
+              : {},
+          ],
 
           // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
         },
@@ -231,10 +272,9 @@ exports.getAllByGuest = async (req, res) => {
         $limit: req.body.filterCondition.perpage,
       },
     ]);
-    console.log("idpath-->>", idPath);
-
-    console.log("ALLDB-->>", allDb);
-    res.status(200).json({ message: "Success get all products!", total, allDb });
+    res
+      .status(200)
+      .json({ message: "Success get all products!", total, allDb });
   } catch (error) {
     console.log(error);
   }
@@ -243,43 +283,50 @@ exports.getAllByGuest = async (req, res) => {
 exports.getAProduct = async (req, res) => {
   try {
     const product = await Products.findById(req.params.id);
-    res.status(200).json({ type: "success", message: "Get A product data successfully!", product: product });
+    res.status(200).json({
+      type: "success",
+      message: "Get A product data successfully!",
+      product: product,
+    });
   } catch (err) {
-    res.status(200).json({ type: "error", message: err.message })
+    res.status(200).json({ type: "error", message: err.message });
   }
-}
+};
 
-exports.addComment = async (req, res) => {
+exports.addReview = async (req, res) => {
   try {
-    const existProduct = await productsModel.findOne(
-      { _id: req.params.id, "comment.user": req.user._id, }
-    )
-    if (existProduct.length > 0) {
-      const updatedProduct = await productsModel.updateOne({
-        _id: req.params.id
-      },
-        {
+    const product = await Products.findById(req.params.id).then(
+      async (item) => {
+        const userId = await item.review.filter((value) => {
+          return toString(value.user) == toString(req.user._id);
+        });
+        if (userId.length)
+          await item.update({
+            $pull: {
+              review: {
+                user: req.user._id,
+              },
+            },
+          });
+        await item.update({
           $push: {
-            comment: {
+            review: {
               user: req.user._id,
-              content: req.body.comment,
-              rate: req.body.rate
-            }
-          }
-        })
-    } else {
-      const updatedProduct = await productsModel.updateOne({
-        _id: req.params.id, "comment.user": req.user._id,
-      },
-        {
-          $set: {
-            "comment.$.content": req.body.comment,
-            "comment.$.rate": req.body.rate
-          }
-        })
-    }
+              rate: req.body.rate,
+              comment: req.body.comment,
+            },
+          },
+        });
+        res.status(200).json({
+          type: "success",
+          message: userId.length
+            ? "Update review successfully!"
+            : "Create review successfully!",
+          product: await Products.findById(req.params.id),
+        });
+      }
+    );
   } catch (err) {
-    res.status(400).json({ type: "error", message: err.message })
+    res.status(200).json({ type: "error", message: err.message });
   }
-
-}
+};
