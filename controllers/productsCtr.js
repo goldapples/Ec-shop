@@ -47,7 +47,7 @@ exports.getAll = async (req, res) => {
       const allDb = await Products.find({
         delete: false,
       }).sort({
-        updatedAt: -1,
+        date: -1,
       });
       res.status(200).json({ allDb });
     } else {
