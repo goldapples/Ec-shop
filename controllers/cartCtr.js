@@ -151,7 +151,9 @@ exports.addAProduct = async (req, res) => {
             },
           }
         );
-        res.status(200).json({ type: "success", message: "Added successfully!" });
+        res
+          .status(200)
+          .json({ type: "success", message: "Added successfully!" });
       } else {
         const product = await Cart.findOne({
           user: mongoose.Types.ObjectId(req.user._id),

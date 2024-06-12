@@ -1,10 +1,6 @@
 const Products = require("../Models/productsModel");
 const Role = require("../Models/roleModel");
-const File = require("../Models/fileModel");
 const mongoose = require("mongoose");
-const dayjs = require("dayjs");
-const productSalesModel = require("../Models/productSalesModel");
-const { sales } = require("./productInventoryCtr");
 const categoryModel = require("../Models/categoryModel");
 const guestModel = require("../Models/guestModel");
 
@@ -52,7 +48,7 @@ exports.getAll = async (req, res) => {
       const allDb = await Products.find({
         delete: false,
       }).sort({
-        updatedAt: -1,
+        date: -1,
       });
       res.status(200).json({ allDb });
     } else {

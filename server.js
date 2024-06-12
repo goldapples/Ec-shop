@@ -9,6 +9,7 @@ const { GlobSync } = require("glob");
 const fs = require("fs");
 const path = require("path");
 const env = require("dotenv");
+const ChatPublicModel = require("./Models/chatPublicModel");
 
 const app = express();
 
@@ -39,10 +40,9 @@ const PORT = process.env.PORT || 5000;
 
 //require models
 const models = new GlobSync("./Models/*Model.js");
-models.found.forEach((model) => 
-{
-require(model)}
-);
+models.found.forEach((model) => {
+  require(model);
+});
 
 //require routers
 const routes = new GlobSync("./routes/*Router.js");
@@ -62,5 +62,57 @@ io.of("/socket").on("connection", (socket) => {
     console.log(data);
     socket.emit("SEND_SALES", data);
     socket.broadcast.emit("SEND_SALES", data);
+  });
+
+  socket.on("SEND_MESSAGE", (data) => {
+    const newMsg = new ChatPublicModel({
+      userId: data.userId,
+      chatMsg: data.chatMsg,
+      roomId: data.roomId,
+      private: data.private,
+      sentTime: data.sentTime,
+      sendDate: data.sendDate,
+    });
+    newMsg
+      .save()
+      .then((user) => {
+        socket.emit("RECEIVE_MESSAGE", user);
+        socket.broadcast.emit("RECEIVE_MESSAGE", user);
+      })
+      .catch((err) => console.log(err));
+  });
+
+  socket.on("netStatus", (data) => {
+    socket.emit("netStatus", data);
+    socket.broadcast.emit("netStatus", { net: "offline" });
+  });
+  //Delete
+  socket.on("DELETE_MESSAGE", async (data) => {
+    await ChatPublicModel.findById({ _id: data.delId }).then(async (chat) => {
+      if (!chat) {
+        socket.emit("errors", { message: "There is no message" });
+      } else {
+        await chat.remove().then(() => {
+          socket.emit("DELETE_MESSAGE", chat);
+          socket.broadcast.emit("DELETE_MESSAGE", chat);
+        });
+      }
+    });
+  });
+
+  //Edit
+  socket.on("EDIT_MESSAGE", async (data) => {
+    await ChatPublicModel.findById({ _id: data.editId }).then(async (chat) => {
+      if (!chat) {
+        socket.emit("errors", { message: "There is no message" });
+      } else {
+        chat.chatMsg = data.editVal;
+        await chat.save().then((msg) => {
+          socket.emit("EDIT_MESSAGE", msg);
+          socket.broadcast.emit("EDIT_MESSAGE", msg);
+          console.log(msg);
+        });
+      }
+    });
   });
 });
