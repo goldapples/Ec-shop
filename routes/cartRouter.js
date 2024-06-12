@@ -3,10 +3,11 @@ const passport = require("passport");
 const requireAuth = passport.authenticate("jwt", { session: false });
 const cartCtr = require("../controllers/cartCtr");
 
-router.get("/cart/getAll", requireAuth, cartCtr.getAllCarts);
-router.get("/cart/deleteACart", requireAuth, cartCtr.deleteACart);
+router.post("/cart/getAll/:id", cartCtr.getAllCarts);
+router.delete("/cart/deleteACart/:id", requireAuth, cartCtr.deleteACart);
 router.post("/cart/addAProduct", requireAuth, cartCtr.addAProduct);
 router.post("/cart/addShipping", requireAuth, cartCtr.addShipping);
 router.post("/cart/addWallet", requireAuth, cartCtr.addWallet)
+router.get("/cart/getallbyuser", requireAuth, cartCtr.getAllByUser)
 
 module.exports = router;
