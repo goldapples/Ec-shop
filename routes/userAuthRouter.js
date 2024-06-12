@@ -13,5 +13,7 @@ router.delete("/delete/:id", requireAuth, AuthCtr.delete);
 router.put("/user/update", requireAuth, AuthCtr.update);
 router.put("/user/updateput", requireAuth, AuthCtr.updateput);
 router.put("/user/allow", requireAuth, AuthCtr.allowCtrl);
+router.put("/user/favourite", requireAuth, AuthCtr.favourite);
+
 
 module.exports = router;

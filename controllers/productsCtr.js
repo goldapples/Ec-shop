@@ -3,8 +3,9 @@ const Role = require("../Models/roleModel");
 const File = require("../Models/fileModel");
 const mongoose = require("mongoose");
 const dayjs = require("dayjs");
-const today = dayjs().$d;
-const threeDay = dayjs().add(-3, "d").$d;
+const productSalesModel = require("../Models/productSalesModel");
+const { sales } = require("./productInventoryCtr");
+const categoryModel = require("../Models/categoryModel");
 
 exports.create = async (req, res) => {
   try {
@@ -130,244 +131,110 @@ exports.update = async (req, res) => {
 };
 
 exports.getAllByGuest = async (req, res) => {
+  const byOrder = req.body.filterCondition.order;
+
   try {
-    if (req.body.filterCondition.category != "All") {
-      if (req.body.filterCondition.onlyNew == true) {
-        const total = await Products.aggregate([
-          {
-            $match: {
-              delete: false,
-              category: mongoose.Types.ObjectId(
-                req.body.filterCondition.category
-              ),
-              // favourite:req.body.filterCondition.favourite,
-              price: {
-                $gte: 1 * req.body.filterCondition.lowerPrice,
-                $lte: 1 * req.body.filterCondition.uppperPrice,
-              },
-              date: {
-                $gte: threeDay,
-                $lte: today,
-              },
-              title: {
-                $regex: req.body.filterCondition.searchWord,
-                $options: "i",
-              },
-              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
-            },
+    const idPath = await categoryModel.aggregate([
+      {
+        $match: {
+          delete: false,
+          idPath: {
+            $regex: req.body.filterCondition.category,
+            $options: "i",
           },
-          {
-            $count: "total",
+        },
+      },
+    ]);
+    const total = await Products.aggregate([
+      {
+        $match: {
+          delete: false,
+          category: {
+            $in: idPath && idPath.map((item) => mongoose.Types.ObjectId(item._id)),
           },
-        ]);
-        const allDb = await Products.aggregate([
-          {
-            $match: {
-              delete: false,
-              category: mongoose.Types.ObjectId(
-                req.body.filterCondition.category
-              ),
-              // favourite:req.body.filterCondition.favourite,
-              price: {
-                $gte: 1 * req.body.filterCondition.lowerPrice,
-                $lte: 1 * req.body.filterCondition.upperPrice,
-              },
-              date: {
-                $gte: threeDay,
-                $lte: today,
-              },
-              title: {
-                $regex: req.body.filterCondition.searchWord,
-                $options: "i",
-              },
-              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
-            },
+          // favourite:req.body.filterCondition.favourite,
+          priceoff: {
+            $gte: 1 * req.body.filterCondition.lowerPrice,
+            $lte: 1 * req.body.filterCondition.upperPrice,
           },
-          {
-            $sort: {
-              date: -1,
-            },
+          date: {
+            $gte: new Date(req.body.filterCondition.sDate),
+            $lte: new Date(req.body.filterCondition.today),
           },
-          {
-            $skip: req.body.filterCondition.currentPage,
+          title: {
+            $regex: req.body.filterCondition.searchWord,
+            $options: "i",
           },
-          {
-            $limit: req.body.filterCondition.perpage,
-          },
-        ]);
-        res.status(200).json({ total, allDb });
-      } else {
-        console.log("req.body.filterCondition.category------->" , req.body.filterCondition.category)
-        const total = await Products.aggregate([
-          {
-            $match: {
-              delete: false,
-              category: mongoose.Types.ObjectId(
-                req.body.filterCondition.category
-              ),
-              // favourite:req.body.filterCondition.favourite,
-              price: {
-                $gte: 1 * req.body.filterCondition.lowerPrice,
-                $lte: 1 * req.body.filterCondition.upperPrice,
-              },
-              title: {
-                $regex: req.body.filterCondition.searchWord,
-                $options: "i",
-              },
-              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
-            },
-          },
-          {
-            $count: "total",
-          },
-        ]);
-        const allDb = await Products.aggregate([
-          {
-            $match: {
-              delete: false,
-              category: mongoose.Types.ObjectId(
-                req.body.filterCondition.category
-              ),
-              // favourite:req.body.filterCondition.favourite,
-              price: {
-                $gte: 1 * req.body.filterCondition.lowerPrice,
-                $lte: 1 * req.body.filterCondition.upperPrice,
-              },
-              title: {
-                $regex: req.body.filterCondition.searchWord,
-                $options: "i",
-              },
-              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
-            },
-          },
-          {
-            $sort: {
-              date: -1,
-            },
-          },
-          {
-            $skip: req.body.filterCondition.currentPage,
-          },
-          {
-            $limit: req.body.filterCondition.perpage,
-          },
-        ]);
-        res.status(200).json({ total, allDb });
-      }
-    } else {
-      if (req.body.filterCondition.onlyNew == true) {
-        const total = await Products.aggregate([
-          {
-            $match: {
-              delete: false,
-              // favourite:req.body.filterCondition.favourite,
-              price: {
-                $gte: 1 * req.body.filterCondition.lowerPrice,
-                $lte: 1 * req.body.filterCondition.upperPrice,
-              },
-              date: {
-                $gte: threeDay,
-                $lte: today,
-              },
-              title: {
-                $regex: req.body.filterCondition.searchWord,
-                $options: "i",
-              },
-              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
-            },
-          },
-          {
-            $count: "total",
-          },
-        ]);
-        const allDb = await Products.aggregate([
-          {
-            $match: {
-              delete: false,
-              // favourite:req.body.filterCondition.favourite,
-              price: {
-                $gte: 1 * req.body.filterCondition.lowerPrice,
-                $lte: 1 * req.body.filterCondition.upperPrice,
-              },
-              date: {
-                $gte: threeDay,
-                $lte: today,
-              },
-              title: {
-                $regex: req.body.filterCondition.searchWord,
-                $options: "i",
-              },
-              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
-            },
-          },
-          {
-            $sort: {
-              date: -1,
-            },
-          },
-          {
-            $skip: req.body.filterCondition.currentPage,
-          },
-          {
-            $limit: req.body.filterCondition.perpage,
-          },
-        ]);
 
-        res.status(200).json({ total, allDb });
-      } else {
-        const total = await Products.aggregate([
-          {
-            $match: {
-              delete: false,
-              // favourite:req.body.filterCondition.favourite,
-              price: {
-                $gte: 1 * req.body.filterCondition.lowerPrice,
-                $lte: 1 * req.body.filterCondition.upperPrice,
-              },
-              title: {
-                $regex: req.body.filterCondition.searchWord,
-                $options: "i",
-              },
+          // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
+        },
+      },
+      {
+        $count: "total",
+      },
+    ]);
 
-              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
+    const allDb = await Products.aggregate([
+      {
+        $match: {
+          delete: false,
+          category: {
+            $in: idPath && idPath.map((item) => mongoose.Types.ObjectId(item._id)),
+          },
+          // favourite:req.body.filterCondition.favourite,
+          priceoff: {
+            $gte: 1 * req.body.filterCondition.lowerPrice,
+            $lte: 1 * req.body.filterCondition.upperPrice,
+          },
+          date: {
+            $gte: new Date(req.body.filterCondition.sDate),
+            $lte: new Date(req.body.filterCondition.today),
+          },
+          title: {
+            $regex: req.body.filterCondition.searchWord,
+            $options: "i",
+          },
+
+          // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
+        },
+      },
+      {
+        $lookup: {
+          from: "productSales",
+          localField: "_id",
+          foreignField: "product",
+          as: "history",
+          pipeline: [{ $count: "totla" }],
+        },
+      },
+      byOrder == "price"
+        ? {
+            $sort: {
+              priceoff: -1,
             },
-          },
-          {
-            $count: "total",
-          },
-        ]);
-        const allDb = await Products.aggregate([
-          {
-            $match: {
-              delete: false,
-              // favourite:req.body.filterCondition.favourite,
-              price: {
-                $gte: 1 * req.body.filterCondition.lowerPrice,
-                $lte: 1 * req.body.filterCondition.upperPrice,
-              },
-              title: {
-                $regex: req.body.filterCondition.searchWord,
-                $options: "i",
-              },
-              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
+          }
+        : byOrder == "popular"
+        ? {
+            $sort: {
+              history: -1,
             },
-          },
-          {
+          }
+        : {
             $sort: {
               date: -1,
             },
           },
-          {
-            $skip: req.body.filterCondition.currentPage,
-          },
-          {
-            $limit: req.body.filterCondition.perpage,
-          },
-        ]);
+      {
+        $skip: req.body.filterCondition.currentPage,
+      },
+      {
+        $limit: req.body.filterCondition.perpage,
+      },
+    ]);
+    console.log("idpath-->>",idPath);
 
-        res.status(200).json({ total, allDb });
-      }
-    }
+    console.log("ALLDB-->>",allDb);
+    res.status(200).json({ message: "Success get all products!" , total, allDb });
   } catch (error) {
     console.log(error);
   }
