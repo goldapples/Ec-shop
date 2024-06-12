@@ -6,6 +6,7 @@ const dayjs = require("dayjs");
 const productSalesModel = require("../Models/productSalesModel");
 const { sales } = require("./productInventoryCtr");
 const categoryModel = require("../Models/categoryModel");
+const guestModel = require("../Models/guestModel");
 
 exports.create = async (req, res) => {
   try {
@@ -131,8 +132,11 @@ exports.update = async (req, res) => {
 
 exports.getAllByGuest = async (req, res) => {
   const byOrder = req.body.filterCondition.order;
-
+  const favourite = req.body.filterCondition.favourite;
   try {
+    const favouriteProductId = await guestModel.findOne({
+      _id: req.body.filterCondition.userId,
+    });
     const idPath = await categoryModel.aggregate([
       {
         $match: {
@@ -145,58 +149,121 @@ exports.getAllByGuest = async (req, res) => {
       },
     ]);
     const total = await Products.aggregate([
-      {
-        $match: {
-          delete: false,
-          category: {
-            $in: idPath && idPath.map((item) => mongoose.Types.ObjectId(item._id)),
-          },
-          // favourite:req.body.filterCondition.favourite,
-          priceoff: {
-            $gte: 1 * req.body.filterCondition.lowerPrice,
-            $lte: 1 * req.body.filterCondition.upperPrice,
-          },
-          date: {
-            $gte: new Date(req.body.filterCondition.sDate),
-            $lte: new Date(req.body.filterCondition.today),
-          },
-          title: {
-            $regex: req.body.filterCondition.searchWord,
-            $options: "i",
-          },
+      favourite == false
+        ? {
+            $match: {
+              delete: false,
+              category: {
+                $in:
+                  idPath &&
+                  idPath.map((item) => mongoose.Types.ObjectId(item._id)),
+              },
+              // favourite:req.body.filterCondition.favourite,
+              priceoff: {
+                $gte: 1 * req.body.filterCondition.lowerPrice,
+                $lte: 1 * req.body.filterCondition.upperPrice,
+              },
+              date: {
+                $gte: new Date(req.body.filterCondition.sDate),
+                $lte: new Date(req.body.filterCondition.today),
+              },
+              title: {
+                $regex: req.body.filterCondition.searchWord,
+                $options: "i",
+              },
 
-          // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
-        },
-      },
+              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
+            },
+          }
+        : {
+            $match: {
+              delete: false,
+              category: {
+                $in:
+                  idPath &&
+                  idPath.map((item) => mongoose.Types.ObjectId(item._id)),
+              },
+              // favourite:req.body.filterCondition.favourite,
+              priceoff: {
+                $gte: 1 * req.body.filterCondition.lowerPrice,
+                $lte: 1 * req.body.filterCondition.upperPrice,
+              },
+              date: {
+                $gte: new Date(req.body.filterCondition.sDate),
+                $lte: new Date(req.body.filterCondition.today),
+              },
+              title: {
+                $regex: req.body.filterCondition.searchWord,
+                $options: "i",
+              },
+              _id: {
+                $in: favouriteProductId?.favourite.map((item) =>
+                  mongoose.Types.ObjectId(item)
+                ),
+              },
+
+              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
+            },
+          },
       {
         $count: "total",
       },
     ]);
 
     const allDb = await Products.aggregate([
-      {
-        $match: {
-          delete: false,
-          category: {
-            $in: idPath && idPath.map((item) => mongoose.Types.ObjectId(item._id)),
-          },
-          // favourite:req.body.filterCondition.favourite,
-          priceoff: {
-            $gte: 1 * req.body.filterCondition.lowerPrice,
-            $lte: 1 * req.body.filterCondition.upperPrice,
-          },
-          date: {
-            $gte: new Date(req.body.filterCondition.sDate),
-            $lte: new Date(req.body.filterCondition.today),
-          },
-          title: {
-            $regex: req.body.filterCondition.searchWord,
-            $options: "i",
-          },
+      favourite == false
+        ? {
+            $match: {
+              delete: false,
+              category: {
+                $in:
+                  idPath &&
+                  idPath.map((item) => mongoose.Types.ObjectId(item._id)),
+              },
+              priceoff: {
+                $gte: 1 * req.body.filterCondition.lowerPrice,
+                $lte: 1 * req.body.filterCondition.upperPrice,
+              },
+              date: {
+                $gte: new Date(req.body.filterCondition.sDate),
+                $lte: new Date(req.body.filterCondition.today),
+              },
+              title: {
+                $regex: req.body.filterCondition.searchWord,
+                $options: "i",
+              },
+              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
+            },
+          }
+        : {
+            $match: {
+              delete: false,
+              category: {
+                $in:
+                  idPath &&
+                  idPath.map((item) => mongoose.Types.ObjectId(item._id)),
+              },
+              priceoff: {
+                $gte: 1 * req.body.filterCondition.lowerPrice,
+                $lte: 1 * req.body.filterCondition.upperPrice,
+              },
+              date: {
+                $gte: new Date(req.body.filterCondition.sDate),
+                $lte: new Date(req.body.filterCondition.today),
+              },
+              title: {
+                $regex: req.body.filterCondition.searchWord,
+                $options: "i",
+              },
+              _id: {
+                $in: favouriteProductId?.favourite.map((item) =>
+                  mongoose.Types.ObjectId(item)
+                ),
+              },
 
-          // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
-        },
-      },
+              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
+            },
+          },
       {
         $lookup: {
           from: "productSales",
@@ -230,10 +297,9 @@ exports.getAllByGuest = async (req, res) => {
         $limit: req.body.filterCondition.perpage,
       },
     ]);
-    console.log("idpath-->>",idPath);
-
-    console.log("ALLDB-->>",allDb);
-    res.status(200).json({ message: "Success get all products!" , total, allDb });
+    res
+      .status(200)
+      .json({ message: "Success get all products!", total, allDb });
   } catch (error) {
     console.log(error);
   }
