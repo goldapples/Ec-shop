@@ -6,6 +6,7 @@ const dayjs = require("dayjs");
 const productSalesModel = require("../Models/productSalesModel");
 const { sales } = require("./productInventoryCtr");
 const categoryModel = require("../Models/categoryModel");
+const productsModel = require("../Models/productsModel");
 
 exports.create = async (req, res) => {
   try {
@@ -208,17 +209,17 @@ exports.getAllByGuest = async (req, res) => {
       },
       byOrder == "price"
         ? {
-            $sort: {
-              priceoff: -1,
-            },
-          }
+          $sort: {
+            priceoff: -1,
+          },
+        }
         : byOrder == "popular"
-        ? {
+          ? {
             $sort: {
               history: -1,
             },
           }
-        : {
+          : {
             $sort: {
               date: -1,
             },
@@ -230,10 +231,10 @@ exports.getAllByGuest = async (req, res) => {
         $limit: req.body.filterCondition.perpage,
       },
     ]);
-    console.log("idpath-->>",idPath);
+    console.log("idpath-->>", idPath);
 
-    console.log("ALLDB-->>",allDb);
-    res.status(200).json({ message: "Success get all products!" , total, allDb });
+    console.log("ALLDB-->>", allDb);
+    res.status(200).json({ message: "Success get all products!", total, allDb });
   } catch (error) {
     console.log(error);
   }
@@ -244,6 +245,41 @@ exports.getAProduct = async (req, res) => {
     const product = await Products.findById(req.params.id);
     res.status(200).json({ type: "success", message: "Get A product data successfully!", product: product });
   } catch (err) {
-    res.status(200).json({type:"error", message:err.message})
+    res.status(200).json({ type: "error", message: err.message })
   }
+}
+
+exports.addComment = async (req, res) => {
+  try {
+    const existProduct = await productsModel.findOne(
+      { _id: req.params.id, "comment.user": req.user._id, }
+    )
+    if (existProduct.length > 0) {
+      const updatedProduct = await productsModel.updateOne({
+        _id: req.params.id
+      },
+        {
+          $push: {
+            comment: {
+              user: req.user._id,
+              content: req.body.comment,
+              rate: req.body.rate
+            }
+          }
+        })
+    } else {
+      const updatedProduct = await productsModel.updateOne({
+        _id: req.params.id, "comment.user": req.user._id,
+      },
+        {
+          $set: {
+            "comment.$.content": req.body.comment,
+            "comment.$.rate": req.body.rate
+          }
+        })
+    }
+  } catch (err) {
+    res.status(400).json({ type: "error", message: err.message })
+  }
+
 }

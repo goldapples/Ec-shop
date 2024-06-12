@@ -10,7 +10,8 @@ router.get("/products/get", requireAuth, ProductsCtr.getAll);
 router.get("/products/images", requireAuth, ProductsCtr.images);
 router.delete("/products/delete/:id", requireAuth, ProductsCtr.delete);
 router.put("/products/update/:id", requireAuth, ProductsCtr.update);
-router.get("/products/getAProduct/:id", ProductsCtr.getAProduct)
+router.get("/products/getAProduct/:id", ProductsCtr.getAProduct);
+router.put("/products/addComment/:id", requireAuth, ProductsCtr.addComment);
 
 
 module.exports = router;

@@ -73,11 +73,13 @@ exports.getAllCarts = async (req, res) => {
             {
                 $match: {
                     $or: [
-                        searchWord ? { title: { $regex: searchWord, $options: "i" } } : {},
+                        { title: { $regex: searchWord, $options: "i" } },
+                        { category: { $regex: searchWord, $options: "i" } }
                     ]
                 }
             }
         ]);
+        console.log(carts)
         let length = carts.length;
         if (length == 0) { return res.status(200).json({ type: "error", result: [], message: "No Products!" }) }
         let sendCart = carts.slice((pn - 1) * ps, pn * ps);
