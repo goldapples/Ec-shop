@@ -322,7 +322,7 @@ exports.addReview = async (req, res) => {
           message: userId.length
             ? "Update review successfully!"
             : "Create review successfully!",
-            product : await Products.findById(req.params.id)
+          product: await Products.findById(req.params.id),
         });
       }
     );
