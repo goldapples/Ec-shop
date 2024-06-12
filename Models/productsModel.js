@@ -45,6 +45,24 @@ const productsSchema = new mongoose.Schema(
       type: Date,
       default: Date.now(),
     },
+    review: [
+      {
+        user: {
+          type: Schema.Types.ObjectId,
+          ref: "Guest",
+        },
+        rate: {
+          type: Number,
+        },
+        comment: {
+          type: String,
+        },
+        delete: {
+          type: Boolean,
+          default: false,
+        },
+      },
+    ],
   },
   modelOption("products")
 );
