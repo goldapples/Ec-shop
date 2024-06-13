@@ -10,6 +10,7 @@ const fs = require("fs");
 const path = require("path");
 const env = require("dotenv");
 const ChatPublicModel = require("./Models/chatPublicModel");
+const ChatPrivateModel = require("./Models/chatPrivateModel");
 
 const app = express();
 
@@ -54,16 +55,90 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-// sockets;
-const io = require("socket.io").listen(express().listen(7001));
-io.of("/socket").on("connection", (socket) => {
-  console.log("Socket server is running on 7001 port");
+//Connetting Socket
+const io = require("socket.io")(7002);
+
+io.on("connection", (socket) => {
+  console.log("Socket server is running on 7002 port");
+  // Private messages
+  const id = socket.handshake.query.id;
+  socket.join(id);
+
+  socket.on(
+    "PRIVATE_SEND_MESSAGE",
+    async ({ recipients, text, roomId1, roomId2 }) => {
+      const roomFlag = await ChatPrivateModel.aggregate([
+        {
+          $match: {
+            delete: false,
+            $or: [{ roomId: roomId1 }, { roomId: roomId2 }],
+          },
+        },
+      ]);
+      if (roomFlag.length === 0) {
+        const newMsg = new ChatPrivateModel({
+          recipients: recipients,
+          roomId: roomId1,
+          messages: [
+            {
+              receiveId: text.receiveId,
+              userId: text.userId,
+              chatMsg: text.chatMsg,
+              sentTime: text.sentTime,
+              sendDate: text.sendDate,
+            },
+          ],
+          private: text.private,
+        });
+        newMsg
+          .save()
+          .then((msg) => {
+            recipients.forEach((recipient) => {
+              const newRecipients = recipients.filter((r) => r !== recipient);
+              newRecipients.push(id);
+              socket.broadcast
+                .to(recipient)
+                .emit("PRIVATE_RECEIVE_MESSAGE", ...msg.messages);
+            });
+          })
+          .catch((err) => console.log(err));
+      } else if (roomFlag.length > 0) {
+        await ChatPrivateModel.findOneAndUpdate(
+          { $or: [{ roomId: roomId1 }, { roomId: roomId2 }] },
+          {
+            $push: {
+              messages: {
+                receiveId: text.receiveId,
+                userId: text.userId,
+                chatMsg: text.chatMsg,
+                sentTime: text.sentTime,
+                sendDate: text.sendDate,
+              },
+            },
+          }
+        ).then((msg) => {
+          recipients.forEach((recipient) => {
+            const newRecipients = recipients.filter((r) => r !== recipient);
+            newRecipients.push(id);
+            socket.broadcast.to(recipient).emit("PRIVATE_RECEIVE_MESSAGE", {
+              receiveId: text.receiveId,
+              userId: text.userId,
+              chatMsg: text.chatMsg,
+              sentTime: text.sentTime,
+              sendDate: text.sendDate,
+            });
+          });
+        });
+      }
+    }
+  );
+  //  Products sales alret
   socket.on("SALES_ALERT", (data) => {
     console.log(data);
     socket.emit("SEND_SALES", data);
     socket.broadcast.emit("SEND_SALES", data);
   });
-
+  // Public messages
   socket.on("SEND_MESSAGE", (data) => {
     const newMsg = new ChatPublicModel({
       userId: data.userId,
@@ -82,10 +157,6 @@ io.of("/socket").on("connection", (socket) => {
       .catch((err) => console.log(err));
   });
 
-  socket.on("netStatus", (data) => {
-    socket.emit("netStatus", data);
-    socket.broadcast.emit("netStatus", { net: "offline" });
-  });
   //Delete
   socket.on("DELETE_MESSAGE", async (data) => {
     await ChatPublicModel.findById({ _id: data.delId }).then(async (chat) => {

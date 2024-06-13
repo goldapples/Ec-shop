@@ -22,6 +22,10 @@ const ChatPublicModel = new Schema({
   sendDate: {
     type: String,
   },
+  delete: {
+    type: Boolean,
+    default: false,
+  },
   date: {
     type: Date,
     default: Date.now(),

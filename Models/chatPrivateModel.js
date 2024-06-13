@@ -2,13 +2,18 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const ChatPrivateModel = new Schema({
-  roomId: { type: String },
-  msg: [
+  recipients: [],
+  delete: {
+    type: Boolean,
+    default: false,
+  },
+  roomId: {
+    type: String,
+  },
+  messages: [
     {
       userId: { type: String },
-      receiceUserId: { type: String },
       chatMsg: { type: String },
-      private: { type: String },
       sentTime: { type: String },
       sendDate: { type: String },
     },
