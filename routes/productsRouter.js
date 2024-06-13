@@ -9,6 +9,7 @@ router.get("/products/get", requireAuth, ProductsCtr.getAll);
 router.get("/products/images", requireAuth, ProductsCtr.images);
 router.delete("/products/delete/:id", requireAuth, ProductsCtr.delete);
 router.put("/products/update/:id", requireAuth, ProductsCtr.update);
+router.put("/products/addreview/:id", requireAuth, ProductsCtr.addReview)
 router.get("/products/getAProduct/:id", ProductsCtr.getAProduct)
 
 
