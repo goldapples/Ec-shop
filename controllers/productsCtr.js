@@ -146,6 +146,18 @@ exports.getAllByGuest = async (req, res) => {
     ]);
     const total = await Products.aggregate([
       {
+        $addFields: {
+          rate: { $avg: "$review.rate" },
+        },
+      },
+      {
+        $addFields: {
+          rate: {
+            $ifNull: ["$rate", 0],
+          },
+        },
+      },
+      {
         $match: {
           $and: [
             { delete: false },
@@ -177,16 +189,20 @@ exports.getAllByGuest = async (req, res) => {
             },
             favourite == true
               ? {
-                _id: {
-                  $in: favouriteProductId?.favourite.map((item) =>
-                    mongoose.Types.ObjectId(item)
-                  ),
-                },
-              }
+                  _id: {
+                    $in: favouriteProductId?.favourite.map((item) =>
+                      mongoose.Types.ObjectId(item)
+                    ),
+                  },
+                }
               : {},
+            {
+              rate: {
+                $gte: 1 * req.body.filterCondition.rate[0],
+                $lte: 1 * req.body.filterCondition.rate[1],
+              },
+            },
           ],
-
-          // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
         },
       },
       {
@@ -196,6 +212,18 @@ exports.getAllByGuest = async (req, res) => {
 
     const allDb = await Products.aggregate([
       {
+        $addFields: {
+          rate: { $avg: "$review.rate" },
+        },
+      },
+      {
+        $addFields: {
+          rate: {
+            $ifNull: ["$rate", 0],
+          },
+        },
+      },
+      {
         $match: {
           $and: [
             { delete: false },
@@ -206,7 +234,6 @@ exports.getAllByGuest = async (req, res) => {
                   idPath.map((item) => mongoose.Types.ObjectId(item._id)),
               },
             },
-            // favourite:req.body.filterCondition.favourite,
             {
               priceoff: {
                 $gte: 1 * req.body.filterCondition.lowerPrice,
@@ -227,16 +254,20 @@ exports.getAllByGuest = async (req, res) => {
             },
             favourite == true
               ? {
-                _id: {
-                  $in: favouriteProductId?.favourite.map((item) =>
-                    mongoose.Types.ObjectId(item)
-                  ),
-                },
-              }
+                  _id: {
+                    $in: favouriteProductId?.favourite.map((item) =>
+                      mongoose.Types.ObjectId(item)
+                    ),
+                  },
+                }
               : {},
+            {
+              rate: {
+                $gte: 1 * req.body.filterCondition.rate[0],
+                $lte: 1 * req.body.filterCondition.rate[1],
+              },
+            },
           ],
-
-          // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
         },
       },
       {
@@ -250,17 +281,17 @@ exports.getAllByGuest = async (req, res) => {
       },
       byOrder == "price"
         ? {
-          $sort: {
-            priceoff: -1,
-          },
-        }
+            $sort: {
+              priceoff: -1,
+            },
+          }
         : byOrder == "popular"
-          ? {
+        ? {
             $sort: {
               history: -1,
             },
           }
-          : {
+        : {
             $sort: {
               date: -1,
             },
@@ -282,10 +313,10 @@ exports.getAllByGuest = async (req, res) => {
 
 exports.getAProduct = async (req, res) => {
   try {
-    const product = await Products.findOne({_id:req.params.id}).populate(
-      { path: "review.user" }
-    )
-    console.log(product)
+    const product = await Products.findOne({ _id: req.params.id }).populate({
+      path: "review.user",
+    });
+    console.log(product);
     res.status(200).json({
       type: "success",
       message: "Get A product data successfully!",
@@ -325,7 +356,9 @@ exports.addReview = async (req, res) => {
           message: userId.length
             ? "Update review successfully!"
             : "Create review successfully!",
-          product: await Products.findById(req.params.id),
+          product: await Products.findById(req.params.id).populate({
+            path: "review.user",
+          }),
         });
       }
     );
