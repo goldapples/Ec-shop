@@ -63,7 +63,7 @@ io.on("connection", (socket) => {
   // Private messages
   const id = socket.handshake.query.id;
   socket.join(id);
-
+  // Private messages Save
   socket.on(
     "PRIVATE_SEND_MESSAGE",
     async ({ recipients, text, roomId1, roomId2 }) => {
@@ -103,6 +103,7 @@ io.on("connection", (socket) => {
           })
           .catch((err) => console.log(err));
       } else if (roomFlag.length > 0) {
+        // Private messages Update
         await ChatPrivateModel.findOneAndUpdate(
           { $or: [{ roomId: roomId1 }, { roomId: roomId2 }] },
           {
@@ -132,6 +133,39 @@ io.on("connection", (socket) => {
       }
     }
   );
+  // Private messages Delete
+  socket.on(
+    "PRIVATE_DELETE_MESSAGE",
+    async ({ recipients, delId, roomId1, roomId2 }) => {
+      const db = await ChatPrivateModel.aggregate([
+        {
+          $match: {
+            $or: [{ roomId: roomId1 }, { roomId: roomId2 }],
+          },
+        },
+        { $unwind: "$messages" },
+        {
+          $match: {
+            "messages._id": mongoose.Types.ObjectId(delId),
+          },
+        },
+        {
+          $set: {
+            "messages.delete": true,
+          },
+        },
+      ]);
+
+      recipients.forEach((recipient) => {
+        const newRecipients = recipients.filter((r) => r !== recipient);
+        newRecipients.push(id);
+        socket.broadcast.to(recipient).emit("PRIVATE_DELETE_MESSAGE", {
+          delId,
+        });
+      });
+    }
+  );
+
   //  Products sales alret
   socket.on("SALES_ALERT", (data) => {
     console.log(data);
@@ -159,6 +193,7 @@ io.on("connection", (socket) => {
 
   //Delete
   socket.on("DELETE_MESSAGE", async (data) => {
+    console.log("data--.", data);
     await ChatPublicModel.findById({ _id: data.delId }).then(async (chat) => {
       if (!chat) {
         socket.emit("errors", { message: "There is no message" });

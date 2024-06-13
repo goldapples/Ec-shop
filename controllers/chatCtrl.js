@@ -1,5 +1,5 @@
 const ChatPublicModel = require("../Models/chatPublicModel");
-const ChatrivateModel = require("../Models/chatPrivateModel");
+const ChatPrivateModel = require("../Models/chatPrivateModel");
 
 exports.all = async (req, res) => {
   const PAGE_SIZE = 10;
@@ -31,34 +31,50 @@ exports.all = async (req, res) => {
 };
 exports.private = async (req, res) => {
   const PAGE_SIZE = 10;
-  const totalCount = await ChatrivateModel.count(false);
+  const totalCount = await ChatPrivateModel.count(false);
   const pages = Math.ceil(totalCount / PAGE_SIZE);
   if (req.body?.page <= pages - 1 || req.body?.page === undefined) {
     try {
-      const db = await ChatrivateModel.aggregate([
+      const db = await ChatPrivateModel.aggregate([
         {
           $match: {
-            delete: false,
             $or: [{ roomId: req.body.roomId1 }, { roomId: req.body.roomId2 }],
           },
         },
         {
-          $skip:
-            PAGE_SIZE *
-            (pages - req.body?.page - 1 <= 0 || req.body?.page === undefined
-              ? pages < 2
-                ? pages - 1
-                : pages - 2
-              : pages - req.body?.page - 2),
+          $project: {
+            messages: 1,
+          },
         },
         {
-          $limit:
-            req.body?.page === undefined
-              ? PAGE_SIZE + (totalCount % PAGE_SIZE)
-              : PAGE_SIZE,
+          $unwind: "$messages",
         },
+        {
+          $set: {
+            count: { $count: {} },
+          },
+        },
+
+        // {
+        //   $skip:
+        //     PAGE_SIZE *
+        //     (pages - req.body?.page - 1 <= 0 || req.body?.page === undefined
+        //       ? pages < 2
+        //         ? pages - 1
+        //         : pages - 2
+        //       : pages - req.body?.page - 2),
+        // },
+        // {
+        //   $limit:
+        //     req.body?.page === undefined
+        //       ? PAGE_SIZE + (totalCount % PAGE_SIZE)
+        //       : PAGE_SIZE,
+        // },
       ]);
-      res.json({ all: db });
+
+      console.log("db-->", db);
+      console.log("dblength-->", db.length);
+      // res.json({ all: db });
     } catch (error) {
       console.log(error);
     }
