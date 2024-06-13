@@ -71,8 +71,6 @@ exports.getAllCategories = async (req, res) => {
 };
 
 exports.getACategory = async (req, res) => {
-  console.log(req.params, "url");
-
   try {
     const { id: categoryId } = req.params;
     const category = await Category.findById(categoryId);
