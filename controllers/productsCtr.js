@@ -145,121 +145,131 @@ exports.getAllByGuest = async (req, res) => {
       },
     ]);
     const total = await Products.aggregate([
-      favourite == false
-        ? {
-            $match: {
-              delete: false,
-              category: {
-                $in:
-                  idPath &&
-                  idPath.map((item) => mongoose.Types.ObjectId(item._id)),
-              },
-              // favourite:req.body.filterCondition.favourite,
-              priceoff: {
-                $gte: 1 * req.body.filterCondition.lowerPrice,
-                $lte: 1 * req.body.filterCondition.upperPrice,
-              },
-              date: {
-                $gte: new Date(req.body.filterCondition.sDate),
-                $lte: new Date(req.body.filterCondition.today),
-              },
-              title: {
-                $regex: req.body.filterCondition.searchWord,
-                $options: "i",
-              },
-
-              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
-            },
-          }
-        : {
-            $match: {
-              delete: false,
-              category: {
-                $in:
-                  idPath &&
-                  idPath.map((item) => mongoose.Types.ObjectId(item._id)),
-              },
-              // favourite:req.body.filterCondition.favourite,
-              priceoff: {
-                $gte: 1 * req.body.filterCondition.lowerPrice,
-                $lte: 1 * req.body.filterCondition.upperPrice,
-              },
-              date: {
-                $gte: new Date(req.body.filterCondition.sDate),
-                $lte: new Date(req.body.filterCondition.today),
-              },
-              title: {
-                $regex: req.body.filterCondition.searchWord,
-                $options: "i",
-              },
-              _id: {
-                $in: favouriteProductId?.favourite.map((item) =>
-                  mongoose.Types.ObjectId(item)
-                ),
-              },
-
-              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
-            },
+      {
+        $addFields: {
+          rate: { $avg: "$review.rate" },
+        },
+      },
+      {
+        $addFields: {
+          rate: {
+            $ifNull: ["$rate", 0],
           },
+        },
+      },
+      {
+        $match: {
+          $and: [
+            { delete: false },
+            {
+              category: {
+                $in:
+                  idPath &&
+                  idPath.map((item) => mongoose.Types.ObjectId(item._id)),
+              },
+            },
+            // favourite:req.body.filterCondition.favourite,
+            {
+              priceoff: {
+                $gte: 1 * req.body.filterCondition.lowerPrice,
+                $lte: 1 * req.body.filterCondition.upperPrice,
+              },
+            },
+            {
+              date: {
+                $gte: new Date(req.body.filterCondition.sDate),
+                $lte: new Date(req.body.filterCondition.today),
+              },
+            },
+            {
+              title: {
+                $regex: req.body.filterCondition.searchWord,
+                $options: "i",
+              },
+            },
+            favourite == true
+              ? {
+                  _id: {
+                    $in: favouriteProductId?.favourite.map((item) =>
+                      mongoose.Types.ObjectId(item)
+                    ),
+                  },
+                }
+              : {},
+            {
+              rate: {
+                $gte: 1 * req.body.filterCondition.rate[0],
+                $lte: 1 * req.body.filterCondition.rate[1],
+              },
+            },
+          ],
+        },
+      },
       {
         $count: "total",
       },
     ]);
 
     const allDb = await Products.aggregate([
-      favourite == false
-        ? {
-            $match: {
-              delete: false,
-              category: {
-                $in:
-                  idPath &&
-                  idPath.map((item) => mongoose.Types.ObjectId(item._id)),
-              },
-              priceoff: {
-                $gte: 1 * req.body.filterCondition.lowerPrice,
-                $lte: 1 * req.body.filterCondition.upperPrice,
-              },
-              date: {
-                $gte: new Date(req.body.filterCondition.sDate),
-                $lte: new Date(req.body.filterCondition.today),
-              },
-              title: {
-                $regex: req.body.filterCondition.searchWord,
-                $options: "i",
-              },
-              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
-            },
-          }
-        : {
-            $match: {
-              delete: false,
-              category: {
-                $in:
-                  idPath &&
-                  idPath.map((item) => mongoose.Types.ObjectId(item._id)),
-              },
-              priceoff: {
-                $gte: 1 * req.body.filterCondition.lowerPrice,
-                $lte: 1 * req.body.filterCondition.upperPrice,
-              },
-              date: {
-                $gte: new Date(req.body.filterCondition.sDate),
-                $lte: new Date(req.body.filterCondition.today),
-              },
-              title: {
-                $regex: req.body.filterCondition.searchWord,
-                $options: "i",
-              },
-              _id: {
-                $in: favouriteProductId?.favourite.map((item) =>
-                  mongoose.Types.ObjectId(item)
-                ),
-              },
-
-              // rate: { $gte: 1*req.body.filterCondition.rate[1], $lte: 1*req.body.filterCondition.rate[0] },
-            },
+      {
+        $addFields: {
+          rate: { $avg: "$review.rate" },
+        },
+      },
+      {
+        $addFields: {
+          rate: {
+            $ifNull: ["$rate", 0],
           },
+        },
+      },
+      {
+        $match: {
+          $and: [
+            { delete: false },
+            {
+              category: {
+                $in:
+                  idPath &&
+                  idPath.map((item) => mongoose.Types.ObjectId(item._id)),
+              },
+            },
+            {
+              priceoff: {
+                $gte: 1 * req.body.filterCondition.lowerPrice,
+                $lte: 1 * req.body.filterCondition.upperPrice,
+              },
+            },
+            {
+              date: {
+                $gte: new Date(req.body.filterCondition.sDate),
+                $lte: new Date(req.body.filterCondition.today),
+              },
+            },
+            {
+              title: {
+                $regex: req.body.filterCondition.searchWord,
+                $options: "i",
+              },
+            },
+            favourite == true
+              ? {
+                  _id: {
+                    $in: favouriteProductId?.favourite.map((item) =>
+                      mongoose.Types.ObjectId(item)
+                    ),
+                  },
+                }
+              : {},
+            {
+              rate: {
+                $gte: 1 * req.body.filterCondition.rate[0],
+                $lte: 1 * req.body.filterCondition.rate[1],
+              },
+            },
+          ],
+        },
+      },
       {
         $lookup: {
           from: "productSales",
@@ -303,12 +313,55 @@ exports.getAllByGuest = async (req, res) => {
 
 exports.getAProduct = async (req, res) => {
   try {
-    const product = await Products.findById(req.params.id);
+    const product = await Products.findOne({ _id: req.params.id }).populate({
+      path: "review.user",
+    });
+    console.log(product);
     res.status(200).json({
       type: "success",
       message: "Get A product data successfully!",
       product: product,
     });
+  } catch (err) {
+    res.status(200).json({ type: "error", message: err.message });
+  }
+};
+
+exports.addReview = async (req, res) => {
+  try {
+    const product = await Products.findById(req.params.id).then(
+      async (item) => {
+        const userId = await item.review.filter((value) => {
+          return toString(value.user) == toString(req.user._id);
+        });
+        if (userId.length)
+          await item.update({
+            $pull: {
+              review: {
+                user: req.user._id,
+              },
+            },
+          });
+        await item.update({
+          $push: {
+            review: {
+              user: req.user._id,
+              rate: req.body.rate,
+              comment: req.body.comment,
+            },
+          },
+        });
+        res.status(200).json({
+          type: "success",
+          message: userId.length
+            ? "Update review successfully!"
+            : "Create review successfully!",
+          product: await Products.findById(req.params.id).populate({
+            path: "review.user",
+          }),
+        });
+      }
+    );
   } catch (err) {
     res.status(200).json({ type: "error", message: err.message });
   }
