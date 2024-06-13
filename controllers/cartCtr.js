@@ -79,7 +79,6 @@ exports.getAllCarts = async (req, res) => {
                 }
             }
         ]);
-        console.log(carts)
         let length = carts.length;
         if (length == 0) { return res.status(200).json({ type: "error", result: [], message: "No Products!" }) }
         let sendCart = carts.slice((pn - 1) * ps, pn * ps);
@@ -187,7 +186,6 @@ exports.addAProduct = async (req, res) => {
               },
             }
           );
-          console.log(addedProduct);
           res
             .status(200)
             .json({ type: "success", message: "Added successfully" });
