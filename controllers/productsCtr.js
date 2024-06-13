@@ -285,7 +285,6 @@ exports.getAProduct = async (req, res) => {
     const product = await Products.findOne({_id:req.params.id}).populate(
       { path: "review.user" }
     )
-    console.log(product)
     res.status(200).json({
       type: "success",
       message: "Get A product data successfully!",
@@ -325,7 +324,9 @@ exports.addReview = async (req, res) => {
           message: userId.length
             ? "Update review successfully!"
             : "Create review successfully!",
-          product: await Products.findById(req.params.id),
+          product: await Products.findById(req.params.id).populate(
+            { path: "review.user" }
+          ),
         });
       }
     );
