@@ -177,12 +177,12 @@ exports.getAllByGuest = async (req, res) => {
             },
             favourite == true
               ? {
-                  _id: {
-                    $in: favouriteProductId?.favourite.map((item) =>
-                      mongoose.Types.ObjectId(item)
-                    ),
-                  },
-                }
+                _id: {
+                  $in: favouriteProductId?.favourite.map((item) =>
+                    mongoose.Types.ObjectId(item)
+                  ),
+                },
+              }
               : {},
           ],
 
@@ -227,12 +227,12 @@ exports.getAllByGuest = async (req, res) => {
             },
             favourite == true
               ? {
-                  _id: {
-                    $in: favouriteProductId?.favourite.map((item) =>
-                      mongoose.Types.ObjectId(item)
-                    ),
-                  },
-                }
+                _id: {
+                  $in: favouriteProductId?.favourite.map((item) =>
+                    mongoose.Types.ObjectId(item)
+                  ),
+                },
+              }
               : {},
           ],
 
@@ -250,17 +250,17 @@ exports.getAllByGuest = async (req, res) => {
       },
       byOrder == "price"
         ? {
-            $sort: {
-              priceoff: -1,
-            },
-          }
+          $sort: {
+            priceoff: -1,
+          },
+        }
         : byOrder == "popular"
-        ? {
+          ? {
             $sort: {
               history: -1,
             },
           }
-        : {
+          : {
             $sort: {
               date: -1,
             },
@@ -282,7 +282,10 @@ exports.getAllByGuest = async (req, res) => {
 
 exports.getAProduct = async (req, res) => {
   try {
-    const product = await Products.findById(req.params.id);
+    const product = await Products.findOne({_id:req.params.id}).populate(
+      { path: "review.user" }
+    )
+    console.log(product)
     res.status(200).json({
       type: "success",
       message: "Get A product data successfully!",
