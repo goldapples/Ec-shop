@@ -304,13 +304,11 @@ exports.getAllByGuest = async (req, res) => {
 exports.getAProduct = async (req, res) => {
   try {
     const product = await Products.findById(req.params.id);
-    res
-      .status(200)
-      .json({
-        type: "success",
-        message: "Get A product data successfully!",
-        product: product,
-      });
+    res.status(200).json({
+      type: "success",
+      message: "Get A product data successfully!",
+      product: product,
+    });
   } catch (err) {
     res.status(200).json({ type: "error", message: err.message });
   }
