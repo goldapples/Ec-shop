@@ -137,24 +137,40 @@ io.on("connection", (socket) => {
   socket.on(
     "PRIVATE_DELETE_MESSAGE",
     async ({ recipients, delId, roomId1, roomId2 }) => {
-      const db = await ChatPrivateModel.aggregate([
+      // const db = await ChatPrivateModel.aggregate([
+      //   {
+      //     $match: {
+      //       $or: [{ roomId: roomId1 }, { roomId: roomId2 }],
+      //     },
+      //   },
+      //   { $unwind: "$messages" },
+      //   {
+      //     $match: {
+      //       "messages._id": mongoose.Types.ObjectId(delId),
+      //     },
+      //   },
+      //   {
+      //     $set: {
+      //       "messages.delete": true,
+      //     },
+      //   },
+      // ]);
+      await ChatPrivateModel.findOneAndUpdate(
         {
-          $match: {
-            $or: [{ roomId: roomId1 }, { roomId: roomId2 }],
-          },
-        },
-        { $unwind: "$messages" },
-        {
-          $match: {
-            "messages._id": mongoose.Types.ObjectId(delId),
-          },
+          $and: [
+            { $or: [{ roomId: roomId1 }, { roomId: roomId2 }] },
+            {
+              "messages._id": mongoose.Types.ObjectId(delId),
+            },
+          ],
         },
         {
           $set: {
-            "messages.delete": true,
+            "messages.$.delete": true,
           },
         },
-      ]);
+        { new: false }
+      );
 
       recipients.forEach((recipient) => {
         const newRecipients = recipients.filter((r) => r !== recipient);
