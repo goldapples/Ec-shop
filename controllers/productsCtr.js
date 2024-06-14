@@ -311,6 +311,179 @@ exports.getAllByGuest = async (req, res) => {
   }
 };
 
+exports.populargetAllByGuest = async (req, res) => {
+  const byOrder = req.body.filterCondition.order;
+  const favourite = req.body.filterCondition.favourite;
+  try {
+    const favouriteProductId = await guestModel.findOne({
+      _id: req.body.filterCondition.userId,
+    });
+    const idPath = await categoryModel.aggregate([
+      {
+        $match: {
+          delete: false,
+          idPath: {
+            $regex: req.body.filterCondition.category,
+            $options: "i",
+          },
+        },
+      },
+    ]);
+    const total = await Products.aggregate([
+      {
+        $addFields: {
+          rate: { $avg: "$review.rate" },
+        },
+      },
+      {
+        $addFields: {
+          rate: {
+            $ifNull: ["$rate", 0],
+          },
+        },
+      },
+      {
+        $match: {
+          $and: [
+            { delete: false },
+            {
+              category: {
+                $in:
+                  idPath &&
+                  idPath.map((item) => mongoose.Types.ObjectId(item._id)),
+              },
+            },
+            // favourite:req.body.filterCondition.favourite,
+            {
+              priceoff: {
+                $gte: 1 * req.body.filterCondition.lowerPrice,
+                $lte: 1 * req.body.filterCondition.upperPrice,
+              },
+            },
+            {
+              date: {
+                $gte: new Date(req.body.filterCondition.sDate),
+                $lte: new Date(req.body.filterCondition.today),
+              },
+            },
+            {
+              title: {
+                $regex: req.body.filterCondition.searchWord,
+                $options: "i",
+              },
+            },
+            favourite == true
+              ? {
+                  _id: {
+                    $in: favouriteProductId?.favourite.map((item) =>
+                      mongoose.Types.ObjectId(item)
+                    ),
+                  },
+                }
+              : {},
+            {
+              rate: {
+                $gte: 1 * req.body.filterCondition.rate[0],
+                $lte: 1 * req.body.filterCondition.rate[1],
+              },
+            },
+          ],
+        },
+      },
+      {
+        $count: "total",
+      },
+    ]);
+
+    const popularAllDb = await Products.aggregate([
+      {
+        $addFields: {
+          rate: { $avg: "$review.rate" },
+        },
+      },
+      {
+        $addFields: {
+          rate: {
+            $ifNull: ["$rate", 0],
+          },
+        },
+      },
+      {
+        $match: {
+          $and: [
+            { delete: false },
+            {
+              category: {
+                $in:
+                  idPath &&
+                  idPath.map((item) => mongoose.Types.ObjectId(item._id)),
+              },
+            },
+            {
+              priceoff: {
+                $gte: 1 * req.body.filterCondition.lowerPrice,
+                $lte: 1 * req.body.filterCondition.upperPrice,
+              },
+            },
+            {
+              date: {
+                $gte: new Date(req.body.filterCondition.sDate),
+                $lte: new Date(req.body.filterCondition.today),
+              },
+            },
+            {
+              title: {
+                $regex: req.body.filterCondition.searchWord,
+                $options: "i",
+              },
+            },
+            favourite == true
+              ? {
+                  _id: {
+                    $in: favouriteProductId?.favourite.map((item) =>
+                      mongoose.Types.ObjectId(item)
+                    ),
+                  },
+                }
+              : {},
+            {
+              rate: {
+                $gte: 1 * req.body.filterCondition.rate[0],
+                $lte: 1 * req.body.filterCondition.rate[1],
+              },
+            },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: "productSales",
+          localField: "_id",
+          foreignField: "product",
+          as: "history",
+          pipeline: [{ $count: "totla" }],
+        },
+      },
+      {
+            $sort: {
+              history: -1,
+            },
+          },
+      {
+        $skip: req.body.filterCondition.currentPage,
+      },
+      {
+        $limit: req.body.filterCondition.perpage,
+      },
+    ]);
+    res
+      .status(200)
+      .json({ message: "Success get all products!", total, popularAllDb });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 exports.getAProduct = async (req, res) => {
   try {
     const product = await Products.findOne({_id:req.params.id}).populate(
