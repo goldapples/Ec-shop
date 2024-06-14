@@ -6,6 +6,7 @@ const ProductsCtr = require("../controllers/productsCtr");
 
 router.post("/products/create", requireAuth, ProductsCtr.create);
 router.post("/products/getbyguest", ProductsCtr.getAllByGuest);
+router.post("/products/populargetbyguest", ProductsCtr.populargetAllByGuest);
 router.get("/products/get", requireAuth, ProductsCtr.getAll);
 router.get("/products/images", requireAuth, ProductsCtr.images);
 router.delete("/products/delete/:id", requireAuth, ProductsCtr.delete);
