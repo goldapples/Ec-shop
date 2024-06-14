@@ -130,7 +130,6 @@ exports.editRole = async (req, res) => {
 };
 
 exports.deleteRole = async (req, res) => {
-  console.log("params",req.params);
   try {
     let { id: roleId } = req.params;
     const role = await Role.findByIdAndUpdate(roleId, { delete: true });
