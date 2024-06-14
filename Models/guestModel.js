@@ -43,6 +43,11 @@ const guestSchema = new Schema(
         apartment: String,
         roomNumber: Number
     },
+    wallet: [
+      {
+        type: Number,
+      }
+    ],
     guest: {
       type: Boolean,
       default: true
