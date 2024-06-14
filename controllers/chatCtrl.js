@@ -30,7 +30,6 @@ exports.all = async (req, res) => {
   }
 };
 exports.private = async (req, res) => {
-  console.log("okay");
   const PAGE_SIZE = 10;
   const num = await ChatPrivateModel.aggregate([
     {
@@ -50,7 +49,6 @@ exports.private = async (req, res) => {
       $count: "totalCount",
     },
   ]);
-  console.log("num-->", num);
   let totalCount = 10;
   num.length ? (totalCount = num[0]?.totalCount) : "";
   const pages = Math.ceil(totalCount / PAGE_SIZE);
@@ -70,10 +68,13 @@ exports.private = async (req, res) => {
         {
           $unwind: "$messages",
         },
+        {
+          $match: {
+            "messages.delete": false,
+          },
+        },
       ]);
 
-      console.log("db-->", db);
-      console.log("dblength-->", db.length);
       res.json({ all: db });
     } catch (error) {
       console.log(error);
