@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 
 exports.getAllCarts = async (req, res) => {
   try {
-    const { pn, ps, searchWord } = req.body;
+    const { searchWord } = req.body;
     const carts = await Cart.aggregate([
       {
         $match: {
@@ -81,7 +81,6 @@ exports.getAllCarts = async (req, res) => {
     ]);
     let length = carts.length;
     if (length == 0) { return res.status(200).json({ type: "error", result: [], message: "No Products!" }) }
-    let sendCart = carts.slice((pn - 1) * ps, pn * ps);
     let sum = 0;
     for (i = 0; i < length; i++) {
       sum += carts[i].totalPrice
@@ -89,7 +88,7 @@ exports.getAllCarts = async (req, res) => {
     return res.status(200).json({
       type: "success",
       message: "success",
-      result: sendCart,
+      result: carts,
       length: length,
       totalPrice: sum
     });
@@ -207,11 +206,11 @@ exports.addShipping = async (req, res) => {
         { user: req.user._id, "shipping._id": user.shipping[0]._id },
         {
           $set: {
-            "shipping.$.country": String(country),
-            "shipping.$.prefecture": String(prefecture),
-            "shipping.$.city": String(city),
-            "shipping.$.apartment": String(apartment),
-            "shipping.$.roomNumber": String(roomNumber)
+            "shipping.$.country": country,
+            "shipping.$.prefecture": prefecture,
+            "shipping.$.city": city,
+            "shipping.$.apartment": apartment,
+            "shipping.$.roomNumber": roomNumber
           }
         }
       );
@@ -259,7 +258,7 @@ exports.addWallet = async (req, res) => {
     });
     await newOrder
       .save()
-      .then(res.json({ type: "success", message: "Success" }))
+      .then(res.json({ type: "success", message: "Checkout Successfully!" }))
       .catch((err) => {
         res.status(500).json({ type: "error", message: err.message });
       });
