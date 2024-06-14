@@ -23,7 +23,7 @@ const cartSchema = new Schema(
             country: {
                 type: String
             },
-            prefacture: {
+            prefecture: {
                 type: String
             },
             city: {
