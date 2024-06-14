@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 
 exports.getAllCarts = async (req, res) => {
   try {
-    const { pn, ps, searchWord } = req.body;
+    const { searchWord } = req.body;
     const carts = await Cart.aggregate([
       {
         $match: {
@@ -81,7 +81,6 @@ exports.getAllCarts = async (req, res) => {
     ]);
     let length = carts.length;
     if (length == 0) { return res.status(200).json({ type: "error", result: [], message: "No Products!" }) }
-    let sendCart = carts.slice((pn - 1) * ps, pn * ps);
     let sum = 0;
     for (i = 0; i < length; i++) {
       sum += carts[i].totalPrice
@@ -89,7 +88,7 @@ exports.getAllCarts = async (req, res) => {
     return res.status(200).json({
       type: "success",
       message: "success",
-      result: sendCart,
+      result: carts,
       length: length,
       totalPrice: sum
     });
