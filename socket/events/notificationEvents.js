@@ -2,7 +2,7 @@ const _ = require('lodash');
 const mongoose = require('mongoose');
 const async = require('async');
 const rp = require('request-promise');
-const Notification = require('../../models/dashboard/NotificationModel');
+// const Notification = require('../../models/dashboard/NotificationModel');
 const notificationUtils = require('../utils/notificationUtils');
 const loggedusersUtils = require('../utils/loggedusersUtils');
 const utils = require('../utils');
@@ -102,17 +102,17 @@ exports.readNotificationByObjIds = ( io, socket, data ) => {
       ids.push( id );
     }
   })
-  Notification.remove(
-    uid === 'all'? {objId: {$in: ids}} : {objId: {$in: ids}, uid: uid},
-    (err, doc) => {
-      if ( err ) {
-        console.log('remove notification by obj err', err);
-        return;
-      }
-      if ( uid ) {
-        const uids = uid=== 'all'? loggedusersUtils.getLoggedUsersId( io ) : [uid];
-        notificationUtils.broadcastNotifications( io, uids );
-      }
-    }
-  )
+  // Notification.remove(
+  //   uid === 'all'? {objId: {$in: ids}} : {objId: {$in: ids}, uid: uid},
+  //   (err, doc) => {
+  //     if ( err ) {
+  //       console.log('remove notification by obj err', err);
+  //       return;
+  //     }
+  //     if ( uid ) {
+  //       const uids = uid=== 'all'? loggedusersUtils.getLoggedUsersId( io ) : [uid];
+  //       notificationUtils.broadcastNotifications( io, uids );
+  //     }
+  //   }
+  // )
 }

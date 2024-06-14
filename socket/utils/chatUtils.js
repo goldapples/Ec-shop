@@ -1,8 +1,8 @@
 const _ = require('lodash');
 const utils = require('./');
 const CONSTS = require('../constants');
-const lang = require('../../_main/_lang/lang');
-const config = require('../../_main/config');
+const lang = require('../../utils/_lang/lang');
+const config = require('../../config/config');
 
 exports.registerConnected = (io, socket, userInfo) => {
 	if (!io || !socket)

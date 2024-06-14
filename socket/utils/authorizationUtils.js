@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const utils = require('./');
 const CONSTS = require('../constants');
-const notificationUtils = require('../utils/notificationUtils');
+// const notificationUtils = require('../utils/notificationUtils');
 
 exports.registerConnected = (io, socket, userInfo) => {
 	if (!io || !socket)
@@ -30,7 +30,8 @@ exports.registerConnected = (io, socket, userInfo) => {
 		pageUrl: existSocket.pageUrl || null,
 		origin: existSocket.origin || '',
 	});
-	notificationUtils.broadcastNotifications(io, [userInfo._id]);
+	console.log(io.connectedUsers.sockets)
+	// notificationUtils.broadcastNotifications(io, [userInfo._id]);
 }
 
 exports.removeConnected = (io, socket) => {

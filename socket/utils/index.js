@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const lang = require('../../_main/_lang/lang');
+const lang = require('../../utils/_lang/lang');
 const CONSTS = require('../constants');
 
 exports.getUserIdFromSocket = ( io, socket ) => {

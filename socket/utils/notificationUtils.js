@@ -1,7 +1,7 @@
 const _ = require("lodash");
 const async = require("async");
 const CONSTS = require("../constants");
-const Notification = require("../../models/dashboard/NotificationModel");
+// const Notification = require("../../models/dashboard/NotificationModel");
 const ChatGroup = require("../../models/user/interchange/chat/ChatGroupModel");
 const ChatRoom = require("../../models/user/interchange/chat/ChatRoomModel");
 
@@ -73,13 +73,15 @@ exports.broadcastNotifications = (io, uids) => {
   async.waterfall(
     [
       function (callback) {
-        Notification.find({ uid: { $in: uids } }).exec((err, docs) => {
-          if (err) {
-            callback(err);
-            return;
-          }
-          callback(null, docs);
-        });
+        // Notification.find({ uid: { $in: uids } }).exec((err, docs) => {
+
+        //   if (err) {
+        //     callback(err);
+        //     return;
+        //   }
+        //   callback(null, docs);
+        
+        // });
       },
       function (notifications, callback) {
         getUnreadsMessages(uids, (chatNotifications) => {
