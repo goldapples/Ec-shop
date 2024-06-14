@@ -1,10 +1,14 @@
 const moment = require("moment/moment");
-const ProductSales = require("../Models/productSalesModel");
+const ProductSales = require("../Models/productSalesModel")
+const Category = require("../Models/categoryModel")
+const Guest = require("../Models/userModel")
+const Manager = require("../Models/userModel")
 const Role = require("../Models/roleModel")
 const Store = require("../Models/storeModel")
-const curMoment = moment();
-const today = curMoment.format("YYYY-MM-DD");
-const thisMonth = curMoment.format("YYYY-MM");
+const productSalesModel = require("../Models/productSalesModel")
+const curMoment = moment()
+const today = curMoment.format("YYYY-MM-DD")
+const thisMonth = curMoment.format("YYYY-MM")
 
 exports.nutChart = async (req, res) => {
   try {
@@ -186,5 +190,76 @@ exports.lineChart = async (req, res) => {
   } catch (error) {
     console.log(error)
     res.json({ type: 'error', message: error.message })
+  }
+}
+
+/**
+ * 
+ * @param {*} req  
+ * @param {message: String, data: Object, type: String} res 
+ */
+
+exports.getStats = async (req, res) => {
+  
+let sDate = new Date(curMoment.format("YYYY-MM-DD"));
+let eDate = new Date(curMoment.format("YYYY-MM-DD"));
+sDate.setDate(0);
+eDate.setDate(30);
+// const thisMonth = curMoment.format("YYYY-MM");
+  try {
+    const totalSales = await ProductSales.aggregate([
+      {
+        $match: {
+          delete: false,
+          date: {$gte: sDate, $lte: eDate}
+        }
+      },
+      {
+        $group: {
+          _id: "delete",
+          totalSales: { $sum: { $multiply: [ "$price", "$sales_cnt" ]} }
+        },
+      }
+    ])
+    const category = await Category.aggregate([
+      {
+        $match: {
+          delete: false
+        }
+      },
+      {
+        $count: "categoryCnt"
+      }
+    ])
+    const managers = await await Manager.aggregate([
+      {
+        $match: {
+          delete: false
+        }
+      },
+      {
+        $count: "managerCnt"
+      }
+    ])
+    const guest = await Guest.aggregate([
+      {
+        $match: {
+          delete: false
+        }
+      },
+      {
+        $count: "guestCnt"
+      }
+    ])
+    const data = {
+      totalSales: totalSales[0].totalSales,
+      categoryCnt: category[0].categoryCnt,
+      managerCnt: managers[0].managerCnt,
+      guestCnt: guest[0].guestCnt
+    }
+    res.json({type: 'success', data: data, message: 'Get Dashboard Stats data successfully'})
+  } catch (error) {
+    console.log(error)
+    res.json({type: 'error', message: error.message})
   }
 }
