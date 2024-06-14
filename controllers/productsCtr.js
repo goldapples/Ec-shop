@@ -279,6 +279,14 @@ exports.getAllByGuest = async (req, res) => {
           pipeline: [{ $count: "totla" }],
         },
       },
+      {
+        $lookup: {
+          from: "category",
+          localField: "category",
+          foreignField: "_id",
+          as: "categoryName",
+        },
+      },
       byOrder == "price"
         ? {
           $sort: {
