@@ -10,7 +10,7 @@ const ChatGroup = require('../../models/user/interchange/chat/ChatGroupModel');
 const ChatRoom = require('../../models/user/interchange/chat/ChatRoomModel');
 const File = require('../../models/component/FileModel');
 
-const config = require('../../_main/config');
+const config = require('../../config/config');
 const config_file = require('../../_main/file/config');
 const utils = require('../utils');
 const chatUtils = require('../utils/chatUtils');

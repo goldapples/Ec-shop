@@ -9,6 +9,7 @@ const { GlobSync } = require("glob");
 const fs = require("fs");
 const path = require("path");
 const env = require("dotenv");
+const socket = require("./socket");
 
 const app = express();
 
@@ -56,11 +57,12 @@ app.listen(PORT, () => {
 
 // sockets;
 const io = require("socket.io").listen(express().listen(7001));
-io.of("/socket").on("connection", (socket) => {
-  console.log("Socket server is running on 7001 port");
-  socket.on("SALES_ALERT", (data) => {
-    console.log(data);
-    socket.emit("SEND_SALES", data);
-    socket.broadcast.emit("SEND_SALES", data);
-  });
-});
+// io.of("/socket").on("connection", (socket) => {
+//   console.log("Socket server is running on 7001 port");
+//   socket.on("SALES_ALERT", (data) => {
+//     console.log(data);
+//     socket.emit("SEND_SALES", data);
+//     socket.broadcast.emit("SEND_SALES", data);
+//   });
+// });
+socket(io);
