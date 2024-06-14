@@ -49,11 +49,11 @@ exports.private = async (req, res) => {
         {
           $unwind: "$messages",
         },
-        {
-          $set: {
-            count: { $count: {} },
-          },
-        },
+        // {
+        //   $set: {
+        //     count: { $count: {} },
+        //   },
+        // },
 
         // {
         //   $skip:
