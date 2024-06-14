@@ -330,7 +330,6 @@ exports.update = async (req, res) => {
 };
 
 exports.shippingupdate = async (req, res) => {
-  console.log("============shipping", req.body);
   try {
     const guest = await Guest.findOne({ _id: req.body._id });
     if (!guest)

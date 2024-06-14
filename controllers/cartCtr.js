@@ -3,96 +3,95 @@ const Order = require("../Models/orderModel");
 const mongoose = require("mongoose");
 
 exports.getAllCarts = async (req, res) => {
-    try {
-        const { pn, ps, searchWord } = req.body;
-        const carts = await Cart.aggregate([
-            {
-                $match: {
-                    user: mongoose.Types.ObjectId(req.params?.id)
-                }
-            },
-            {
-                $project: {
-                    products: 1,
-                }
-            },
-            {
-                $unwind: {
-                    path: "$products", preserveNullAndEmptyArrays: true
-                }
-            },
-            {
-                $match: {
-                    "products.delete": false
-                }
-            },
-            {
-                $lookup: {
-                    from: 'products',
-                    localField: "products.product",
-                    foreignField: "_id",
-                    as: "product",
-                }
-            },
-            {
-                $project: {
-                    real_product: "$product",
-                    quantity: "$products.quantity",
-                }
-            },
-            {
-                $unwind: {
-                    path: "$real_product", preserveNullAndEmptyArrays: true
-                }
-            },
-            {
-                $lookup: {
-                    from: 'category',
-                    localField: "real_product.category",
-                    foreignField: "_id",
-                    as: "category",
-                }
-            },
-            {
-                $project: {
-                    title: "$real_product.title",
-                    files: "$real_product.files",
-                    price: "$real_product.price",
-                    quantity: "$quantity",
-                    category: "$category.title",
-                    id: "$real_product._id"
-                }
-            },
-            {
-                $addFields: {
-                    totalPrice: {
-                        $sum: { $multiply: ["$price", "$quantity"] },
-                    }
-                }
-            },
-            {
-                $match: {
-                    $or: [
-                        { title: { $regex: searchWord, $options: "i" } },
-                        { category: { $regex: searchWord, $options: "i" } }
-                    ]
-                }
-            }
-        ]);
-        let length = carts.length;
-        if (length == 0) { return res.status(200).json({ type: "error", result: [], message: "No Products!" }) }
-        let sendCart = carts.slice((pn - 1) * ps, pn * ps);
-        let sum = 0;
-        for (i = 0; i < length; i++) {
-            sum += carts[i].totalPrice
+  try {
+    const { searchWord } = req.body;
+    const carts = await Cart.aggregate([
+      {
+        $match: {
+          user: mongoose.Types.ObjectId(req.params?.id)
         }
-        return res.status(200).json({
-            type: "success",
-            message: "success",
-            result: sendCart,
-            length: length,
-            totalPrice: sum
-        });
+      },
+      {
+        $project: {
+          products: 1,
+        }
+      },
+      {
+        $unwind: {
+          path: "$products", preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $match: {
+          "products.delete": false
+        }
+      },
+      {
+        $lookup: {
+          from: 'products',
+          localField: "products.product",
+          foreignField: "_id",
+          as: "product",
+        }
+      },
+      {
+        $project: {
+          real_product: "$product",
+          quantity: "$products.quantity",
+        }
+      },
+      {
+        $unwind: {
+          path: "$real_product", preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $lookup: {
+          from: 'category',
+          localField: "real_product.category",
+          foreignField: "_id",
+          as: "category",
+        }
+      },
+      {
+        $project: {
+          title: "$real_product.title",
+          files: "$real_product.files",
+          price: "$real_product.price",
+          quantity: "$quantity",
+          category: "$category.title",
+          id: "$real_product._id"
+        }
+      },
+      {
+        $addFields: {
+          totalPrice: {
+            $sum: { $multiply: ["$price", "$quantity"] },
+          }
+        }
+      },
+      {
+        $match: {
+          $or: [
+            { title: { $regex: searchWord, $options: "i" } },
+            { category: { $regex: searchWord, $options: "i" } }
+          ]
+        }
+      }
+    ]);
+    let length = carts.length;
+    if (length == 0) { return res.status(200).json({ type: "error", result: [], message: "No Products!" }) }
+    let sum = 0;
+    for (i = 0; i < length; i++) {
+      sum += carts[i].totalPrice
+    }
+    return res.status(200).json({
+      type: "success",
+      message: "success",
+      result: carts,
+      length: length,
+      totalPrice: sum
+    });
   } catch (err) {
     res.status(400).json({ type: "error", message: err.message });
   }
@@ -125,7 +124,7 @@ exports.addAProduct = async (req, res) => {
       });
       newCart
         .save()
-        .then(res.status(200).json({ type: "success", message: "Success", result:newCart}))
+        .then(res.status(200).json({ type: "success", message: "Success", result: newCart }))
         .catch((err) => {
           res.status(500).json({ type: "error", message: err.message });
         });
@@ -148,7 +147,7 @@ exports.addAProduct = async (req, res) => {
         );
         res
           .status(200)
-          .json({ type: "success", message: "Added successfully!", result : updatedProduct});
+          .json({ type: "success", message: "Added successfully!", result: updatedProduct });
       } else {
         const product = await Cart.findOne({
           user: mongoose.Types.ObjectId(req.user._id),
@@ -156,7 +155,7 @@ exports.addAProduct = async (req, res) => {
           "products.delete": false,
         });
         if (product) {
-          if (req.body.quantity >= 1) {
+          if (req.body.quantity > 1) {
             await Cart.updateOne(
               { user: req.user._id, "products.product": req.body._id },
               {
@@ -168,7 +167,7 @@ exports.addAProduct = async (req, res) => {
             res.status(200).json({
               type: "success",
               message: "Amount changed successfully!",
-              result:product
+              result: product
             });
           } else {
             res
@@ -189,7 +188,7 @@ exports.addAProduct = async (req, res) => {
           );
           res
             .status(200)
-            .json({ type: "success", message: "Added successfully", result:addedProduct });
+            .json({ type: "success", message: "Added successfully", result: addedProduct });
         }
       }
     }
@@ -200,12 +199,35 @@ exports.addAProduct = async (req, res) => {
 
 exports.addShipping = async (req, res) => {
   try {
-    let receivedAdrs = req.body.defaultShippingAddress;
+    const { country, prefecture, city, apartment, roomNumber } = req.body.shippAdrs;
     const user = await Cart.findOne({ user: req.user._id });
-    if (user) {
+    if (user.shipping.length > 0) {
+      const shipping = await Cart.updateOne(
+        { user: req.user._id, "shipping._id": user.shipping[0]._id },
+        {
+          $set: {
+            "shipping.$.country": country,
+            "shipping.$.prefecture": prefecture,
+            "shipping.$.city": city,
+            "shipping.$.apartment": apartment,
+            "shipping.$.roomNumber": roomNumber
+          }
+        }
+      );
+    } else {
       const shipping = await Cart.updateOne(
         { user: req.user._id },
-        { $set: { shipping: receivedAdrs } }
+        {
+          $push: {
+            shipping: {
+              country: country,
+              prefecture: prefecture,
+              city: city,
+              apartment: apartment,
+              roomNumber: roomNumber
+            }
+          }
+        }
       );
     }
     res.status(200).json({
@@ -236,7 +258,7 @@ exports.addWallet = async (req, res) => {
     });
     await newOrder
       .save()
-      .then(res.json({ type: "success", message: "Success" }))
+      .then(res.json({ type: "success", message: "Checkout Successfully!" }))
       .catch((err) => {
         res.status(500).json({ type: "error", message: err.message });
       });
