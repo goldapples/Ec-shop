@@ -16,6 +16,10 @@ const ChatPrivateModel = new Schema({
       chatMsg: { type: String },
       sentTime: { type: String },
       sendDate: { type: String },
+      delete: {
+        type: Boolean,
+        default: false,
+      },
     },
   ],
   date: {
