@@ -125,7 +125,7 @@ exports.addAProduct = async (req, res) => {
       });
       newCart
         .save()
-        .then(res.status(200).json({ type: "success", message: "Success" }))
+        .then(res.status(200).json({ type: "success", message: "Success", result:newCart}))
         .catch((err) => {
           res.status(500).json({ type: "error", message: err.message });
         });
@@ -148,7 +148,7 @@ exports.addAProduct = async (req, res) => {
         );
         res
           .status(200)
-          .json({ type: "success", message: "Added successfully!" });
+          .json({ type: "success", message: "Added successfully!", result : updatedProduct});
       } else {
         const product = await Cart.findOne({
           user: mongoose.Types.ObjectId(req.user._id),
@@ -168,6 +168,7 @@ exports.addAProduct = async (req, res) => {
             res.status(200).json({
               type: "success",
               message: "Amount changed successfully!",
+              result:product
             });
           } else {
             res
@@ -188,7 +189,7 @@ exports.addAProduct = async (req, res) => {
           );
           res
             .status(200)
-            .json({ type: "success", message: "Added successfully" });
+            .json({ type: "success", message: "Added successfully", result:addedProduct });
         }
       }
     }
