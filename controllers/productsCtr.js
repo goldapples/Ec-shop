@@ -189,12 +189,12 @@ exports.getAllByGuest = async (req, res) => {
             },
             favourite == true
               ? {
-                _id: {
-                  $in: favouriteProductId?.favourite.map((item) =>
-                    mongoose.Types.ObjectId(item)
-                  ),
-                },
-              }
+                  _id: {
+                    $in: favouriteProductId?.favourite.map((item) =>
+                      mongoose.Types.ObjectId(item)
+                    ),
+                  },
+                }
               : {},
             {
               rate: {
@@ -254,12 +254,12 @@ exports.getAllByGuest = async (req, res) => {
             },
             favourite == true
               ? {
-                _id: {
-                  $in: favouriteProductId?.favourite.map((item) =>
-                    mongoose.Types.ObjectId(item)
-                  ),
-                },
-              }
+                  _id: {
+                    $in: favouriteProductId?.favourite.map((item) =>
+                      mongoose.Types.ObjectId(item)
+                    ),
+                  },
+                }
               : {},
             {
               rate: {
@@ -289,17 +289,17 @@ exports.getAllByGuest = async (req, res) => {
       },
       byOrder == "price"
         ? {
-          $sort: {
-            priceoff: -1,
-          },
-        }
+            $sort: {
+              priceoff: -1,
+            },
+          }
         : byOrder == "popular"
-          ? {
+        ? {
             $sort: {
               history: -1,
             },
           }
-          : {
+        : {
             $sort: {
               date: -1,
             },
@@ -473,10 +473,10 @@ exports.populargetAllByGuest = async (req, res) => {
         },
       },
       {
-            $sort: {
-              history: -1,
-            },
-          },
+        $sort: {
+          history: -1,
+        },
+      },
       {
         $skip: req.body.filterCondition.currentPage,
       },
@@ -494,17 +494,17 @@ exports.populargetAllByGuest = async (req, res) => {
 
 exports.getAProduct = async (req, res) => {
   try {
-    const product = await Products.findOne({ _id: req.params.id }).populate(
-      { path: "review.user" }
-    );
+    const product = await Products.findOne({ _id: req.params.id }).populate({
+      path: "review.user",
+    });
     const rate = await Products.aggregate([
       { $match: { _id: mongoose.Types.ObjectId(req.params.id) } },
       {
         $addFields: {
-          rate: { $avg: "$review.rate" }
-        }
+          rate: { $avg: "$review.rate" },
+        },
       },
-      { $project: { rate: 1 } }
+      { $project: { rate: 1 } },
     ]);
     res.status(200).json({
       type: "success",
@@ -546,9 +546,9 @@ exports.addReview = async (req, res) => {
           message: userId.length
             ? "Update review successfully!"
             : "Create review successfully!",
-          product: await Products.findById(req.params.id).populate(
-            { path: "review.user" }
-          ),
+          product: await Products.findById(req.params.id).populate({
+            path: "review.user",
+          }),
         });
       }
     );

@@ -1,5 +1,6 @@
 const ChatPublicModel = require("../Models/chatPublicModel");
 const ChatPrivateModel = require("../Models/chatPrivateModel");
+const ChatGroupModel = require("../Models/chatGroupModel");
 
 exports.all = async (req, res) => {
   const PAGE_SIZE = 10;
@@ -82,4 +83,8 @@ exports.private = async (req, res) => {
   } else {
     res.json({ all: [] });
   }
+};
+
+exports.group = async (req, res) => {
+  await ChatGroupModel.find().then((group) => res.json(group));
 };

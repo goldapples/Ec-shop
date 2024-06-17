@@ -9,6 +9,7 @@ const { GlobSync } = require("glob");
 const fs = require("fs");
 const path = require("path");
 const env = require("dotenv");
+const ChatGroupModel = require("./Models/chatGroupModel");
 const ChatPublicModel = require("./Models/chatPublicModel");
 const ChatPrivateModel = require("./Models/chatPrivateModel");
 
@@ -94,8 +95,6 @@ io.on("connection", (socket) => {
           .save()
           .then((msg) => {
             recipients.forEach((recipient) => {
-              const newRecipients = recipients.filter((r) => r !== recipient);
-              newRecipients.push(id);
               socket.broadcast
                 .to(recipient)
                 .emit("PRIVATE_RECEIVE_MESSAGE", ...msg.messages);
@@ -119,8 +118,6 @@ io.on("connection", (socket) => {
           }
         ).then((msg) => {
           recipients.forEach((recipient) => {
-            const newRecipients = recipients.filter((r) => r !== recipient);
-            newRecipients.push(id);
             socket.broadcast.to(recipient).emit("PRIVATE_RECEIVE_MESSAGE", {
               receiveId: text.receiveId,
               userId: text.userId,
@@ -137,24 +134,6 @@ io.on("connection", (socket) => {
   socket.on(
     "PRIVATE_DELETE_MESSAGE",
     async ({ recipients, delId, roomId1, roomId2 }) => {
-      // const db = await ChatPrivateModel.aggregate([
-      //   {
-      //     $match: {
-      //       $or: [{ roomId: roomId1 }, { roomId: roomId2 }],
-      //     },
-      //   },
-      //   { $unwind: "$messages" },
-      //   {
-      //     $match: {
-      //       "messages._id": mongoose.Types.ObjectId(delId),
-      //     },
-      //   },
-      //   {
-      //     $set: {
-      //       "messages.delete": true,
-      //     },
-      //   },
-      // ]);
       await ChatPrivateModel.findOneAndUpdate(
         {
           $and: [
@@ -173,10 +152,38 @@ io.on("connection", (socket) => {
       );
 
       recipients.forEach((recipient) => {
-        const newRecipients = recipients.filter((r) => r !== recipient);
-        newRecipients.push(id);
         socket.broadcast.to(recipient).emit("PRIVATE_DELETE_MESSAGE", {
           delId,
+        });
+      });
+    }
+  );
+
+  // Private messages Edit
+  socket.on(
+    "PRIVATE_EDIT_MESSAGE",
+    async ({ recipients, editId, editVal, roomId1, roomId2 }) => {
+      console.log("okay");
+      await ChatPrivateModel.findOneAndUpdate(
+        {
+          $and: [
+            { $or: [{ roomId: roomId1 }, { roomId: roomId2 }] },
+            {
+              "messages._id": mongoose.Types.ObjectId(editId),
+            },
+          ],
+        },
+        {
+          $set: {
+            "messages.$.chatMsg": editVal,
+          },
+        },
+        { new: false }
+      ).then(async () => {
+        recipients.forEach((recipient) => {
+          socket.broadcast
+            .to(recipient)
+            .emit("PRIVATE_EDIT_MESSAGE", { editId, editVal });
         });
       });
     }
@@ -201,8 +208,7 @@ io.on("connection", (socket) => {
     newMsg
       .save()
       .then((user) => {
-        socket.emit("RECEIVE_MESSAGE", user);
-        socket.broadcast.emit("RECEIVE_MESSAGE", user);
+        io.sockets.emit("RECEIVE_MESSAGE", user);
       })
       .catch((err) => console.log(err));
   });
@@ -236,5 +242,24 @@ io.on("connection", (socket) => {
         });
       }
     });
+  });
+
+  // Create Group
+  socket.on("CREATE_GROUP", ({ title, creator, users, recipients }) => {
+    const newGroup = new ChatGroupModel({
+      title: title,
+      creator: creator,
+      users: users,
+    });
+    newGroup
+      .save()
+      .then((msg) => {
+        console.log("recipients-->", recipients);
+        recipients.forEach((recipient) => {
+          socket.broadcast.to(recipient).emit("ADD_NEW_GROUP", msg);
+        });
+        socket.emit("ADD_NEW_GROUP", msg);
+      })
+      .catch((err) => console.log(err));
   });
 });
