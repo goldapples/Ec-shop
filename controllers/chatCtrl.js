@@ -86,5 +86,35 @@ exports.private = async (req, res) => {
 };
 
 exports.group = async (req, res) => {
-  await ChatGroupModel.find().then((group) => res.json(group));
+  await ChatGroupModel.find().then((group) =>
+    res.json({ type: "success", message: "Success!", group: group })
+  );
+};
+exports.groupChat = async (req, res) => {
+  try {
+    const db = await ChatPrivateModel.aggregate([
+      {
+        $match: {
+          roomId: req.body.roomId,
+        },
+      },
+      {
+        $project: {
+          messages: 1,
+        },
+      },
+      {
+        $unwind: "$messages",
+      },
+      {
+        $match: {
+          "messages.delete": false,
+        },
+      },
+    ]);
+
+    res.json({ all: db });
+  } catch (error) {
+    console.log(error);
+  }
 };

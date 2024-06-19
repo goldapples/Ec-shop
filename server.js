@@ -262,4 +262,70 @@ io.on("connection", (socket) => {
       })
       .catch((err) => console.log(err));
   });
+
+  // Group Chatting NEW Message
+  socket.on("GROUP_SEND_MESSAGE", async ({ recipients, text, roomId }) => {
+    const roomFlag = await ChatPrivateModel.aggregate([
+      {
+        $match: {
+          delete: false,
+          roomId: roomId,
+        },
+      },
+    ]);
+    if (roomFlag.length === 0) {
+      const newMsg = new ChatPrivateModel({
+        recipients: recipients,
+        roomId: roomId,
+        messages: [
+          {
+            userId: text.userId,
+            chatMsg: text.chatMsg,
+            sentTime: text.sentTime,
+            sendDate: text.sendDate,
+          },
+        ],
+        private: text.private,
+      });
+      newMsg
+        .save()
+        .then((msg) => {
+          recipients.forEach((recipient) => {
+            socket.broadcast
+              .to(recipient)
+              .emit("GROUP_RECEIVE_MESSAGE", ...msg.messages, roomId);
+            socket.emit("GROUP_RECEIVE_MESSAGE", ...msg.messages, roomId);
+          });
+        })
+        .catch((err) => console.log(err));
+    } else if (roomFlag.length > 0) {
+      // Private messages Update
+      await ChatPrivateModel.findOneAndUpdate(
+        { roomId: roomId },
+        {
+          $push: {
+            messages: {
+              userId: text.userId,
+              chatMsg: text.chatMsg,
+              sentTime: text.sentTime,
+              sendDate: text.sendDate,
+            },
+          },
+        }
+      ).then(() => {
+        let msg = {
+          userId: text.userId,
+          chatMsg: text.chatMsg,
+          sentTime: text.sentTime,
+          sendDate: text.sendDate,
+        };
+        recipients.forEach((recipient) => {
+          socket.broadcast
+            .to(recipient)
+            .emit("GROUP_RECEIVE_MESSAGE", msg, roomId);
+        });
+        socket.emit("GROUP_RECEIVE_MESSAGE", msg, roomId);
+      });
+    }
+  });
 });
