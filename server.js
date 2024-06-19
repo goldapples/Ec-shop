@@ -156,6 +156,7 @@ io.on("connection", (socket) => {
           delId,
         });
       });
+      socket.emit("PRIVATE_DELETE_MESSAGE", { delId });
     }
   );
 
@@ -185,13 +186,13 @@ io.on("connection", (socket) => {
             .to(recipient)
             .emit("PRIVATE_EDIT_MESSAGE", { editId, editVal });
         });
+        socket.emit("PRIVATE_EDIT_MESSAGE", { editId, editVal });
       });
     }
   );
 
   //  Products sales alret
   socket.on("SALES_ALERT", (data) => {
-    console.log(data);
     socket.emit("SEND_SALES", data);
     socket.broadcast.emit("SEND_SALES", data);
   });
@@ -254,7 +255,6 @@ io.on("connection", (socket) => {
     newGroup
       .save()
       .then((msg) => {
-        console.log("recipients-->", recipients);
         recipients.forEach((recipient) => {
           socket.broadcast.to(recipient).emit("ADD_NEW_GROUP", msg);
         });
@@ -299,7 +299,7 @@ io.on("connection", (socket) => {
         })
         .catch((err) => console.log(err));
     } else if (roomFlag.length > 0) {
-      // Private messages Update
+      // Group messages Update
       await ChatPrivateModel.findOneAndUpdate(
         { roomId: roomId },
         {
@@ -328,4 +328,61 @@ io.on("connection", (socket) => {
       });
     }
   });
+  // Group Chatting Delete
+  socket.on("GROUP_DELETE_MESSAGE", async ({ recipients, delId, roomId }) => {
+    await ChatPrivateModel.findOneAndUpdate(
+      {
+        $and: [
+          { roomId: roomId },
+          {
+            "messages._id": mongoose.Types.ObjectId(delId),
+          },
+        ],
+      },
+      {
+        $set: {
+          "messages.$.delete": true,
+        },
+      },
+      { new: false }
+    );
+
+    recipients.forEach((recipient) => {
+      socket.broadcast.to(recipient).emit("GROUP_DELETE_MESSAGE", {
+        delId,
+      });
+    });
+    socket.emit("GROUP_DELETE_MESSAGE", delId);
+  });
+
+  // Group messages Edit
+  socket.on(
+    "GROUP_EDIT_MESSAGE",
+    async ({ recipients, editId, editVal, roomId }) => {
+      console.log("okay");
+      await ChatPrivateModel.findOneAndUpdate(
+        {
+          $and: [
+            { roomId: roomId },
+            {
+              "messages._id": mongoose.Types.ObjectId(editId),
+            },
+          ],
+        },
+        {
+          $set: {
+            "messages.$.chatMsg": editVal,
+          },
+        },
+        { new: false }
+      ).then(async () => {
+        recipients.forEach((recipient) => {
+          socket.broadcast
+            .to(recipient)
+            .emit("GROUP_EDIT_MESSAGE", { editId, editVal });
+        });
+        socket.emit("GROUP_EDIT_MESSAGE", { editId, editVal });
+      });
+    }
+  );
 });
