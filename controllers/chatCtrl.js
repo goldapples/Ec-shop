@@ -1,5 +1,6 @@
 const ChatPublicModel = require("../Models/chatPublicModel");
 const ChatPrivateModel = require("../Models/chatPrivateModel");
+const ChatGroupModel = require("../Models/chatGroupModel");
 
 exports.all = async (req, res) => {
   const PAGE_SIZE = 10;
@@ -81,5 +82,39 @@ exports.private = async (req, res) => {
     }
   } else {
     res.json({ all: [] });
+  }
+};
+
+exports.group = async (req, res) => {
+  await ChatGroupModel.find().then((group) =>
+    res.json({ type: "success", message: "Success!", group: group })
+  );
+};
+exports.groupChat = async (req, res) => {
+  try {
+    const db = await ChatPrivateModel.aggregate([
+      {
+        $match: {
+          roomId: req.body.roomId,
+        },
+      },
+      {
+        $project: {
+          messages: 1,
+        },
+      },
+      {
+        $unwind: "$messages",
+      },
+      {
+        $match: {
+          "messages.delete": false,
+        },
+      },
+    ]);
+
+    res.json({ all: db });
+  } catch (error) {
+    console.log(error);
   }
 };
