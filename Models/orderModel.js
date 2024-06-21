@@ -46,8 +46,8 @@ const orderSchema = new mongoose.Schema(
       type: String
     },
     permission: {
-      type: Boolean,
-      default: false
+      type: Number,
+      default: 0
     },
     delete: {
       type: Boolean,
