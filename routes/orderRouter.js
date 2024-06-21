@@ -2,10 +2,9 @@ const router = require("express").Router();
 const passport = require("passport");
 require("../config/passport")
 const requireAuth = passport.authenticate("jwt", { session: false });
-const OrderhistoryCtr = require("../controllers/orderhistoryCtr");
+const OrderCtr = require("../controllers/orderCtr");
 
-router.get("/orderhistory", requireAuth, OrderhistoryCtr.getOrderhistory);
-router.delete("/order/delete/:id", OrderhistoryCtr.delete)
-
+router.get("/order/getAll", OrderCtr.getAll);
+router.post("/order/setState/:id", OrderCtr.setState);
 
 module.exports = router;

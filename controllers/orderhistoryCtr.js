@@ -4,29 +4,60 @@ const jwt = require("jsonwebtoken");
 const config = require("../config/config");
 const passport = require("passport");
 const async = require("async");
+
+exports.delete = async (req, res) => {
+  try {
+    let { id } = req.params;
+    Orderhistory.findByIdAndDelete(id, (err) => {
+    if (err) res.status(500).json({ message: "err" });
+    else res.json({ message: "success" });
+  });
+  } catch (error) {
+    
+  }
+};
+
 exports.getOrderhistory = async (req, res) => {
   try {
-    const guest = await Orderhistory.findOne({ _id: req.body._id });
-    if (!guest)
-    return res.status(500).send({ message: "Guest Order does not exists." });
       const OrderDb = await Orderhistory.aggregate([
         {
           $match: {
             delete: false,
-            permission: false,
+            permission: true,
+            user: req.user._id,
           }
         },
         {
-          $lookup:
-          {
+          $unwind: {
+            path: "$products",
+          },
+        },
+        {
+          $lookup: {
             from: "products",
-            localField: "_id",
+            localField: "products.product",
             foreignField: "_id",
-            as: "product"
+            as: "products_info"
           }
         },
+        {
+					$unwind: {
+						path: "$products_info"
+					}
+				},
+        {
+					$project: {
+						_id: 1,
+						products: 1,
+						shipping: 1,
+						updatedAt: 1,
+						products_info: 1,
+						total: {
+								$multiply: ["$products.quantity", "$products_info.saleprice"]
+						}
+					}
+				},
       ])
-      console.log('==========result==========', OrderDb);
       res.status(200).json({type: "success", OrderDb})
 
 } catch (error) {
