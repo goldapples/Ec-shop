@@ -8,50 +8,52 @@ exports.getAllCarts = async (req, res) => {
     const carts = await Cart.aggregate([
       {
         $match: {
-          user: mongoose.Types.ObjectId(req.params?.id)
-        }
+          user: mongoose.Types.ObjectId(req.params?.id),
+        },
       },
       {
         $project: {
           products: 1,
-        }
+        },
       },
       {
         $unwind: {
-          path: "$products", preserveNullAndEmptyArrays: true
-        }
+          path: "$products",
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $match: {
-          "products.delete": false
-        }
+          "products.delete": false,
+        },
       },
       {
         $lookup: {
-          from: 'products',
+          from: "products",
           localField: "products.product",
           foreignField: "_id",
           as: "product",
-        }
+        },
       },
       {
         $project: {
           real_product: "$product",
           quantity: "$products.quantity",
-        }
+        },
       },
       {
         $unwind: {
-          path: "$real_product", preserveNullAndEmptyArrays: true
-        }
+          path: "$real_product",
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $lookup: {
-          from: 'category',
+          from: "category",
           localField: "real_product.category",
           foreignField: "_id",
           as: "category",
-        }
+        },
       },
       {
         $project: {
@@ -60,37 +62,41 @@ exports.getAllCarts = async (req, res) => {
           price: "$real_product.price",
           quantity: "$quantity",
           category: "$category.title",
-          id: "$real_product._id"
-        }
+          id: "$real_product._id",
+        },
       },
       {
         $addFields: {
           totalPrice: {
             $sum: { $multiply: ["$price", "$quantity"] },
-          }
-        }
+          },
+        },
       },
       {
         $match: {
           $or: [
             { title: { $regex: searchWord, $options: "i" } },
-            { category: { $regex: searchWord, $options: "i" } }
-          ]
-        }
-      }
+            { category: { $regex: searchWord, $options: "i" } },
+          ],
+        },
+      },
     ]);
     let length = carts.length;
-    if (length == 0) { return res.status(200).json({ type: "error", result: [], message: "No Products!" }) }
+    if (length == 0) {
+      return res
+        .status(200)
+        .json({ type: "error", result: [], message: "No Products!" });
+    }
     let sum = 0;
     for (i = 0; i < length; i++) {
-      sum += carts[i].totalPrice
+      sum += carts[i].totalPrice;
     }
     return res.status(200).json({
       type: "success",
       message: "success",
       result: carts,
       length: length,
-      totalPrice: sum
+      totalPrice: sum,
     });
   } catch (err) {
     res.status(400).json({ type: "error", message: err.message });
@@ -124,7 +130,11 @@ exports.addAProduct = async (req, res) => {
       });
       newCart
         .save()
-        .then(res.status(200).json({ type: "success", message: "Success", result: newCart }))
+        .then(
+          res
+            .status(200)
+            .json({ type: "success", message: "Success", result: newCart })
+        )
         .catch((err) => {
           res.status(500).json({ type: "error", message: err.message });
         });
@@ -165,7 +175,7 @@ exports.addAProduct = async (req, res) => {
             res.status(200).json({
               type: "success",
               message: "Amount changed successfully!",
-              result: product
+              result: product,
             });
           } else {
             res
@@ -184,9 +194,11 @@ exports.addAProduct = async (req, res) => {
               },
             }
           );
-          res
-            .status(200)
-            .json({ type: "success", message: "Added successfully", result: addedProduct });
+          res.status(200).json({
+            type: "success",
+            message: "Added successfully",
+            result: addedProduct,
+          });
         }
       }
     }
