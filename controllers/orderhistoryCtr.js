@@ -4,16 +4,15 @@ const jwt = require("jsonwebtoken");
 const config = require("../config/config");
 const passport = require("passport");
 const async = require("async");
+const mongoose = require('mongoose')
 
 exports.delete = async (req, res) => {
   try {
-    let { id } = req.params;
-    Orderhistory.findByIdAndDelete(id, (err) => {
-    if (err) res.status(500).json({ message: "err" });
-    else res.json({ message: "success" });
-  });
+    let { orderId, productId } = req.query;
+    const res = await  Orderhistory.updateOne({_id : mongoose.Types.ObjectId(orderId)}, {$pull: {products: {_id : mongoose.Types.ObjectId(productId)}}})
+    console.log(res)
   } catch (error) {
-    
+    console.log(error)
   }
 };
 
@@ -23,7 +22,6 @@ exports.getOrderhistory = async (req, res) => {
         {
           $match: {
             delete: false,
-            permission: true,
             user: req.user._id,
           }
         },
@@ -52,11 +50,19 @@ exports.getOrderhistory = async (req, res) => {
 						shipping: 1,
 						updatedAt: 1,
 						products_info: 1,
+            permission: 1,
 						total: {
-								$multiply: ["$products.quantity", "$products_info.saleprice"]
+								$multiply: ["$products.quantity", "$products_info.price"]
 						}
 					}
 				},
+        {
+					$unwind: {
+            path: "$shipping",
+            preserveNullAndEmptyArrays: true,
+          }
+
+				}
       ])
       res.status(200).json({type: "success", OrderDb})
 
@@ -64,4 +70,6 @@ exports.getOrderhistory = async (req, res) => {
   return res.json({type: "error", message: "error"})
 }
 };
+
+
 
