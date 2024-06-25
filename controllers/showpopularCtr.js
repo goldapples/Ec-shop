@@ -8,32 +8,45 @@ exports.bestUser = async (req,res) => {
       {
         $match: {
           delete: false,
+					
         }
       },
+			{
+				$addFields: {
+					total: {
+						$multiply: [
+							"$price", "$sales_cnt"
+						]
+					}
+				}
+			},
+			{
+				$group: {
+					_id: "$person",
+					bestPrice: {
+						$sum: "$total"
+					}
+				}
+			},
+			{
+				$lookup: {
+					from: "guest",
+					localField: "_id",
+					foreignField: "_id",
+					as: "bestUser"
+				}
+			},
+			{
+				$unwind: "$bestUser"
+			},
       {
-        $group: {
-          _id: "$person",
-          sales_cnt: {
-            $sum: "$sales_cnt",
-          }
-        }
-      },
-      {
-        $sort: {
-          sales_cnt: -1,
-        }
-      },
-      {
-        $lookup: {
-          from: "guest",
-          localField: "_id",
-          foreignField: "_id",
-          as: "bestUser"
-        }
-      },
-      {
-        $unwind: "$bestUser"
-      }
+				$sort: {
+					bestPrice: -1
+				}
+			},
+			{
+				$limit: 3
+			}
     ])
     res.status(200).json({type: "success", bestUserDb})
   } catch (error) {
@@ -115,7 +128,6 @@ exports.getAll = async (req, res) => {
         
       ])
 
-      console.log('result', allDb);
       res.status(200).json({ type: "success", allDb });
   } catch (error) {
     console.log(error);
