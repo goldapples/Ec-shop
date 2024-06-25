@@ -8,8 +8,11 @@ module.exports = function (io, socket) {
   socket.on("C2S_CREATE_NEW_ROOM", (data) =>
     chatEvents.newCreateRoom(io, socket, data)
   );
+  socket.on("C2S_EDITE_GROUP", (data) =>
+    chatEvents.editeRoom(io, socket, data)
+  );
   socket.on("C2S_DELETE_GROUP", (data) =>
-    chatEvents.deleteCreateRoom(io, socket, data)
+    chatEvents.deleteRoom(io, socket, data)
   );
   socket.on("C2S_GET_ALL_ROOMS", (data) =>
     chatEvents.getAllRooms(io, socket, data)
