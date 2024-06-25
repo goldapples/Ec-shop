@@ -241,43 +241,6 @@ exports.tokenlogin = async (req, res) => {
     return res.json({ type: 'error', message: error.message })
   }
 };
-// exports.tokenlogin = async (req, res) => {
-//   await User.findById({ _id: req.user.id })
-//     .populate("role")
-//     .then(async (user) => {
-//       if (!user) {
-//         return res
-//           .status(400)
-//           .json({ type: "error", message: "You are not registered" });
-//       }
-//       if (!user.allow) {
-//         return res
-//           .status(400)
-//           .json({ type: "error", message: "You are not allowed" });
-//       }
-//       const payload = {
-//         id: user._id,
-//         email: user.email,
-//         name: user.name,
-//         password: user.password,
-//         avatar: user?.avatar,
-//         role: user?.role?.title,
-//       };
-//       jwt.sign(
-//         payload,
-//         config.secretOrKey,
-//         { expiresIn: 3600 },
-//         (err, token) => {
-//           if (err) return res.json(500).json({ message: err.message });
-//           return res.json({
-//             message: "Success",
-//             token: "Bearer " + token,
-//             user: user,
-//           });
-//         }
-//       );
-//     });
-// };
 exports.getAll = async (req, res) => {
   try {
     const users = await User.find({ delete: false }).populate("role store");
