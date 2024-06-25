@@ -155,7 +155,13 @@ exports.addAProduct = async (req, res) => {
             },
           }
         );
-        res.status(200).json({ type: "success", message: "Added successfully!", result: updatedProduct });
+        res
+          .status(200)
+          .json({
+            type: "success",
+            message: "Added successfully!",
+            result: updatedProduct,
+          });
       } else {
         const product = await Cart.findOne({
           user: mongoose.Types.ObjectId(req.user._id),
@@ -209,36 +215,36 @@ exports.addAProduct = async (req, res) => {
 
 exports.addShipping = async (req, res) => {
   try {
-    const { store, country, prefecture, city, apartment, roomNumber } = req.body.shippAdrs;
+    const { store, country, prefecture, city, apartment, roomNumber } =
+      req.body.shippAdrs;
     const user = await Cart.findOne({ user: req.user._id });
     if (user.shipping.length > 0) {
-      const shipping = await Cart.find({ user: req.user._id, "shipping._id": user.shipping[0]._id }).updateOne(
-        {
-          $set: {
-            "shipping.$.country": country,
-            "shipping.$.prefecture": prefecture,
-            "shipping.$.city": city,
-            "shipping.$.apartment": apartment,
-            "shipping.$.roomNumber": roomNumber,
-            "store": store
-          }
-        }
-      );
-    } else {
-      const shipping = await Cart.find({ user: req.user._id }).updateOne(
-        {
-          $set: {
-            shipping: {
-              country: country,
-              prefecture: prefecture,
-              city: city,
-              apartment: apartment,
-              roomNumber: roomNumber
-            },
-            store: store
-          }
+      const shipping = await Cart.find({
+        user: req.user._id,
+        "shipping._id": user.shipping[0]._id,
+      }).updateOne({
+        $set: {
+          "shipping.$.country": country,
+          "shipping.$.prefecture": prefecture,
+          "shipping.$.city": city,
+          "shipping.$.apartment": apartment,
+          "shipping.$.roomNumber": roomNumber,
+          store: store,
         },
-      );
+      });
+    } else {
+      const shipping = await Cart.find({ user: req.user._id }).updateOne({
+        $set: {
+          shipping: {
+            country: country,
+            prefecture: prefecture,
+            city: city,
+            apartment: apartment,
+            roomNumber: roomNumber,
+          },
+          store: store,
+        },
+      });
     }
     res.status(200).json({
       type: "success",
@@ -253,7 +259,7 @@ exports.addWallet = async (req, res) => {
   try {
     const user = await Cart.findOne({ user: req.user._id });
     if (user) {
-      console.log(res.body)
+      console.log(res.body);
       const newOrder = await new Order({
         user: user.user,
         products: user.products,
@@ -261,14 +267,15 @@ exports.addWallet = async (req, res) => {
         store: user.store,
         wallet: req.body.sendAddress,
       });
-      newOrder.save()
+      newOrder
+        .save()
         .then(res.json({ type: "success", message: "Checkout Successfully!" }))
         .catch((err) => {
           res.status(500).json({ type: "error", message: err.message });
         });
       await Cart.findOneAndDelete({ user: req.user._id });
     } else {
-      res.json({ type: "success", message: "User not found!" })
+      res.json({ type: "success", message: "User not found!" });
     }
   } catch (error) {
     res.json({ type: "error", message: error.message });
