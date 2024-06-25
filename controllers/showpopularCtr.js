@@ -1,52 +1,60 @@
-const Productsales = require("../Models/productSalesModel");
+const orderModel = require("../Models/orderModel");
 const Role = require("../Models/roleModel");
 const File = require("../Models/fileModel");
 
 exports.bestUser = async (req,res) => {
   try {
-    const bestUserDb = await Productsales.aggregate([
+    const bestUserDb = await orderModel.aggregate([
       {
-        $match: {
-          delete: false,
-					
+        $unwind: "$products"
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "products.product",
+          foreignField: "_id",
+          as: "productForOrder"
         }
       },
-			{
-				$addFields: {
-					total: {
-						$multiply: [
-							"$price", "$sales_cnt"
-						]
-					}
-				}
-			},
-			{
-				$group: {
-					_id: "$person",
-					bestPrice: {
-						$sum: "$total"
-					}
-				}
-			},
-			{
-				$lookup: {
-					from: "guest",
-					localField: "_id",
-					foreignField: "_id",
-					as: "bestUser"
-				}
-			},
-			{
-				$unwind: "$bestUser"
-			},
       {
-				$sort: {
-					bestPrice: -1
-				}
-			},
-			{
-				$limit: 3
-			}
+        $unwind: "$productForOrder"
+      },
+      {
+        $addFields: {
+          total: {
+            $multiply: [
+              "$products.quantity", "$productForOrder.price"
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: "$user",
+          total: {
+            $sum: "$total"
+          }
+        }
+      },
+      {
+        $sort: {
+          total: -1
+        }
+      },
+      {
+        $limit: 3
+      },
+      {
+        $lookup: {
+          from: "guest",
+          localField: "_id",
+          foreignField: "_id",
+          as: "bestUser"
+        }
+      },
+      {
+        $unwind: "$bestUser"
+      }
     ])
     res.status(200).json({type: "success", bestUserDb})
   } catch (error) {

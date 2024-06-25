@@ -5,7 +5,7 @@ const requireAuth = passport.authenticate("jwt", { session: false });
 const OrderhistoryCtr = require("../controllers/orderhistoryCtr");
 
 router.get("/orderhistory", requireAuth, OrderhistoryCtr.getOrderhistory);
-router.delete("/order/delete/:id", OrderhistoryCtr.delete)
+router.delete("/order/delete", OrderhistoryCtr.delete)
 
 
 module.exports = router;
