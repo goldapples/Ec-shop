@@ -3,6 +3,7 @@ const Role = require("../Models/roleModel");
 const mongoose = require("mongoose");
 const categoryModel = require("../Models/categoryModel");
 const guestModel = require("../Models/guestModel");
+const dayjs = require("dayjs");
 
 exports.create = async (req, res) => {
   try {
@@ -175,12 +176,19 @@ exports.getAllByGuest = async (req, res) => {
                 $lte: 1 * req.body.filterCondition.upperPrice,
               },
             },
-            {
-              date: {
-                $gte: new Date(req.body.filterCondition.sDate),
-                $lte: new Date(req.body.filterCondition.today),
-              },
-            },
+            req.body.filterCondition.onlyNew === true
+              ? {
+                  date: {
+                    $gte: dayjs().add(-3, "d").$d,
+                    $lte: new Date(),
+                  },
+                }
+              : {
+                  date: {
+                    $gte: new Date(0),
+                    $lte: new Date(),
+                  },
+                },
             {
               title: {
                 $regex: req.body.filterCondition.searchWord,
@@ -209,7 +217,6 @@ exports.getAllByGuest = async (req, res) => {
         $count: "total",
       },
     ]);
-
     const allDb = await Products.aggregate([
       {
         $addFields: {
@@ -240,12 +247,19 @@ exports.getAllByGuest = async (req, res) => {
                 $lte: 1 * req.body.filterCondition.upperPrice,
               },
             },
-            {
-              date: {
-                $gte: new Date(req.body.filterCondition.sDate),
-                $lte: new Date(req.body.filterCondition.today),
-              },
-            },
+            req.body.filterCondition.onlyNew === true
+              ? {
+                  date: {
+                    $gte: dayjs().add(-3, "d").$d,
+                    $lte: new Date(),
+                  },
+                }
+              : {
+                  date: {
+                    $gte: new Date(0),
+                    $lte: new Date(),
+                  },
+                },
             {
               title: {
                 $regex: req.body.filterCondition.searchWord,
