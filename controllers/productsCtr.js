@@ -66,28 +66,61 @@ exports.getAll = async (req, res) => {
 };
 exports.images = async (req, res) => {
   try {
-    const imgs = await Products.aggregate([
-      {
-        $sort: {
-          updatedAt: -1,
+    const role = await Role.findOne({ _id: req.user.role });
+    if (role.title === "admin") {
+      const imgs = await Products.aggregate([
+        {
+          $sort: {
+            updatedAt: -1,
+          },
         },
-      },
-      {
-        $project: {
-          files: 1,
-          title: 1,
-          price: 1,
-          priceoff: 1,
-          description: 1,
-          date: 1,
-          cnt: 1,
+        {
+          $project: {
+            files: 1,
+            title: 1,
+            price: 1,
+            priceoff: 1,
+            description: 1,
+            date: 1,
+            cnt: 1,
+          },
         },
-      },
-    ]);
-    if (!imgs) {
-      return res.status(500).json({ type: "error", message: error.message });
+      ]);
+      if (!imgs) {
+        return res.status(500).json({ type: "error", message: error.message });
+      } else {
+        res.status(200).json(imgs);
+      }
     } else {
-      res.status(200).json(imgs);
+      const imgs = await Products.aggregate([
+        {
+          $match: {
+            delete: false,
+            store: req.user.store,
+          },
+        },
+        {
+          $sort: {
+            updatedAt: -1,
+          },
+        },
+        {
+          $project: {
+            files: 1,
+            title: 1,
+            price: 1,
+            priceoff: 1,
+            description: 1,
+            date: 1,
+            cnt: 1,
+          },
+        },
+      ]);
+      if (!imgs) {
+        return res.status(500).json({ type: "error", message: error.message });
+      } else {
+        res.status(200).json(imgs);
+      }
     }
   } catch (error) {
     console.log(error);
@@ -189,12 +222,12 @@ exports.getAllByGuest = async (req, res) => {
             },
             favourite == true
               ? {
-                _id: {
-                  $in: favouriteProductId?.favourite.map((item) =>
-                    mongoose.Types.ObjectId(item)
-                  ),
-                },
-              }
+                  _id: {
+                    $in: favouriteProductId?.favourite.map((item) =>
+                      mongoose.Types.ObjectId(item)
+                    ),
+                  },
+                }
               : {},
             {
               rate: {
@@ -254,12 +287,12 @@ exports.getAllByGuest = async (req, res) => {
             },
             favourite == true
               ? {
-                _id: {
-                  $in: favouriteProductId?.favourite.map((item) =>
-                    mongoose.Types.ObjectId(item)
-                  ),
-                },
-              }
+                  _id: {
+                    $in: favouriteProductId?.favourite.map((item) =>
+                      mongoose.Types.ObjectId(item)
+                    ),
+                  },
+                }
               : {},
             {
               rate: {
@@ -289,17 +322,17 @@ exports.getAllByGuest = async (req, res) => {
       },
       byOrder == "price"
         ? {
-          $sort: {
-            priceoff: -1,
-          },
-        }
+            $sort: {
+              priceoff: -1,
+            },
+          }
         : byOrder == "popular"
-          ? {
+        ? {
             $sort: {
               history: -1,
             },
           }
-          : {
+        : {
             $sort: {
               date: -1,
             },
@@ -382,12 +415,12 @@ exports.populargetAllByGuest = async (req, res) => {
             },
             favourite == true
               ? {
-                _id: {
-                  $in: favouriteProductId?.favourite.map((item) =>
-                    mongoose.Types.ObjectId(item)
-                  ),
-                },
-              }
+                  _id: {
+                    $in: favouriteProductId?.favourite.map((item) =>
+                      mongoose.Types.ObjectId(item)
+                    ),
+                  },
+                }
               : {},
             {
               rate: {
@@ -447,12 +480,12 @@ exports.populargetAllByGuest = async (req, res) => {
             },
             favourite == true
               ? {
-                _id: {
-                  $in: favouriteProductId?.favourite.map((item) =>
-                    mongoose.Types.ObjectId(item)
-                  ),
-                },
-              }
+                  _id: {
+                    $in: favouriteProductId?.favourite.map((item) =>
+                      mongoose.Types.ObjectId(item)
+                    ),
+                  },
+                }
               : {},
             {
               rate: {
@@ -495,7 +528,7 @@ exports.populargetAllByGuest = async (req, res) => {
 exports.getAProduct = async (req, res) => {
   try {
     const product = await Products.findOne({ _id: req.params.id }).populate({
-      path: "review.user category"
+      path: "review.user",
     });
     const rate = await Products.aggregate([
       { $match: { _id: mongoose.Types.ObjectId(req.params.id) } },
