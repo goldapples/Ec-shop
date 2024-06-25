@@ -69,6 +69,7 @@ exports.images = async (req, res) => {
   try {
     const role = await Role.findOne({ _id: req.user.role });
     if (role.title === "admin") {
+      console.log("admin");
       const imgs = await Products.aggregate([
         {
           $sort: {
