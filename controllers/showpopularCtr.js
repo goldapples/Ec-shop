@@ -2,6 +2,45 @@ const Productsales = require("../Models/productSalesModel");
 const Role = require("../Models/roleModel");
 const File = require("../Models/fileModel");
 
+exports.bestUser = async (req,res) => {
+  try {
+    const bestUserDb = await Productsales.aggregate([
+      {
+        $match: {
+          delete: false,
+        }
+      },
+      {
+        $group: {
+          _id: "$person",
+          sales_cnt: {
+            $sum: "$sales_cnt",
+          }
+        }
+      },
+      {
+        $sort: {
+          sales_cnt: -1,
+        }
+      },
+      {
+        $lookup: {
+          from: "guest",
+          localField: "_id",
+          foreignField: "_id",
+          as: "bestUser"
+        }
+      },
+      {
+        $unwind: "$bestUser"
+      }
+    ])
+    res.status(200).json({type: "success", bestUserDb})
+  } catch (error) {
+    return res.json({type: "error", message: "bestUserError"})
+  }
+};
+
 exports.create = async (req, res) => {
   try {
     await Products.findOne({ title: req.body.title }).then((user) => {
