@@ -67,28 +67,62 @@ exports.getAll = async (req, res) => {
 };
 exports.images = async (req, res) => {
   try {
-    const imgs = await Products.aggregate([
-      {
-        $sort: {
-          updatedAt: -1,
+    const role = await Role.findOne({ _id: req.user.role });
+    if (role.title === "admin") {
+      console.log("admin");
+      const imgs = await Products.aggregate([
+        {
+          $sort: {
+            updatedAt: -1,
+          },
         },
-      },
-      {
-        $project: {
-          files: 1,
-          title: 1,
-          price: 1,
-          priceoff: 1,
-          description: 1,
-          date: 1,
-          cnt: 1,
+        {
+          $project: {
+            files: 1,
+            title: 1,
+            price: 1,
+            priceoff: 1,
+            description: 1,
+            date: 1,
+            cnt: 1,
+          },
         },
-      },
-    ]);
-    if (!imgs) {
-      return res.status(500).json({ type: "error", message: error.message });
+      ]);
+      if (!imgs) {
+        return res.status(500).json({ type: "error", message: error.message });
+      } else {
+        res.status(200).json(imgs);
+      }
     } else {
-      res.status(200).json(imgs);
+      const imgs = await Products.aggregate([
+        {
+          $match: {
+            delete: false,
+            store: req.user.store,
+          },
+        },
+        {
+          $sort: {
+            updatedAt: -1,
+          },
+        },
+        {
+          $project: {
+            files: 1,
+            title: 1,
+            price: 1,
+            priceoff: 1,
+            description: 1,
+            date: 1,
+            cnt: 1,
+          },
+        },
+      ]);
+      if (!imgs) {
+        return res.status(500).json({ type: "error", message: error.message });
+      } else {
+        res.status(200).json(imgs);
+      }
     }
   } catch (error) {
     console.log(error);

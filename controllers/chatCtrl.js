@@ -14,7 +14,7 @@ exports.all = async (req, res) => {
         PAGE_SIZE *
           (pages - req.body?.page - 1 <= 0 || req.body?.page === undefined
             ? pages < 2
-              ? pages - 1
+              ? 0
               : pages - 2
             : pages - req.body?.page - 2)
       )
@@ -84,9 +84,15 @@ exports.private = async (req, res) => {
     res.json({ all: [] });
   }
 };
-
+// Get all groups
 exports.group = async (req, res) => {
-  await ChatGroupModel.find({ creator: req.body.groupId }).then((group) =>
+  await ChatGroupModel.find({
+    $or: [
+      { creator: req.body.groupId },
+      { users: { $in: [req.body.groupId] } },
+    ],
+  }).then((group) =>
+    // await ChatGroupModel.find({ creator: req.body.groupId }).then((group) =>
     res.json({ type: "success", message: "Success!", group: group })
   );
 };
