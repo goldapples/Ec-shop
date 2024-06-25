@@ -182,6 +182,7 @@ exports.sales = async (req, res) => {
         },
         { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
       ]);
+      console.log(result)
       res.status(200).json({ allDb: result });
     } else if (role.title === "manager" || role.title === "user") {
       const result = await ProductSales.aggregate([

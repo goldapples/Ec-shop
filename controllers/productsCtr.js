@@ -189,12 +189,12 @@ exports.getAllByGuest = async (req, res) => {
             },
             favourite == true
               ? {
-                  _id: {
-                    $in: favouriteProductId?.favourite.map((item) =>
-                      mongoose.Types.ObjectId(item)
-                    ),
-                  },
-                }
+                _id: {
+                  $in: favouriteProductId?.favourite.map((item) =>
+                    mongoose.Types.ObjectId(item)
+                  ),
+                },
+              }
               : {},
             {
               rate: {
@@ -254,12 +254,12 @@ exports.getAllByGuest = async (req, res) => {
             },
             favourite == true
               ? {
-                  _id: {
-                    $in: favouriteProductId?.favourite.map((item) =>
-                      mongoose.Types.ObjectId(item)
-                    ),
-                  },
-                }
+                _id: {
+                  $in: favouriteProductId?.favourite.map((item) =>
+                    mongoose.Types.ObjectId(item)
+                  ),
+                },
+              }
               : {},
             {
               rate: {
@@ -289,17 +289,17 @@ exports.getAllByGuest = async (req, res) => {
       },
       byOrder == "price"
         ? {
-            $sort: {
-              priceoff: -1,
-            },
-          }
+          $sort: {
+            priceoff: -1,
+          },
+        }
         : byOrder == "popular"
-        ? {
+          ? {
             $sort: {
               history: -1,
             },
           }
-        : {
+          : {
             $sort: {
               date: -1,
             },
@@ -382,12 +382,12 @@ exports.populargetAllByGuest = async (req, res) => {
             },
             favourite == true
               ? {
-                  _id: {
-                    $in: favouriteProductId?.favourite.map((item) =>
-                      mongoose.Types.ObjectId(item)
-                    ),
-                  },
-                }
+                _id: {
+                  $in: favouriteProductId?.favourite.map((item) =>
+                    mongoose.Types.ObjectId(item)
+                  ),
+                },
+              }
               : {},
             {
               rate: {
@@ -447,12 +447,12 @@ exports.populargetAllByGuest = async (req, res) => {
             },
             favourite == true
               ? {
-                  _id: {
-                    $in: favouriteProductId?.favourite.map((item) =>
-                      mongoose.Types.ObjectId(item)
-                    ),
-                  },
-                }
+                _id: {
+                  $in: favouriteProductId?.favourite.map((item) =>
+                    mongoose.Types.ObjectId(item)
+                  ),
+                },
+              }
               : {},
             {
               rate: {
@@ -495,7 +495,7 @@ exports.populargetAllByGuest = async (req, res) => {
 exports.getAProduct = async (req, res) => {
   try {
     const product = await Products.findOne({ _id: req.params.id }).populate({
-      path: "review.user",
+      path: "review.user category"
     });
     const rate = await Products.aggregate([
       { $match: { _id: mongoose.Types.ObjectId(req.params.id) } },
