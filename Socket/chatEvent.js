@@ -333,7 +333,6 @@ exports.getAllRoomMessage = async (io, socket, data) => {
         },
       },
     ]);
-
     socket.broadcast.emit("S2C_NEW_ROOM_MESSAGE", { res });
     socket.emit("S2C_NEW_ROOM_MESSAGE", { res });
   } catch (error) {
