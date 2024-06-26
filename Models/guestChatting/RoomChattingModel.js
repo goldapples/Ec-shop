@@ -21,7 +21,10 @@ const RoomChattingSchema = new Schema(
     ],
     messages: [
       {
-        date: Date,
+        date: {
+          type: Date,
+          default: Date.now(),
+        },
         senderId: {
           type: Schema.Types.ObjectId,
           ref: "guest",
