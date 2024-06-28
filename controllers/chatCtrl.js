@@ -1,6 +1,8 @@
 const ChatPublicModel = require("../Models/chatPublicModel");
 const ChatPrivateModel = require("../Models/chatPrivateModel");
 const ChatGroupModel = require("../Models/chatGroupModel");
+const GuestModel = require("../Models/guestModel");
+const mongoose = require("mongoose");
 
 exports.all = async (req, res) => {
   const PAGE_SIZE = 10;
@@ -12,11 +14,11 @@ exports.all = async (req, res) => {
       // .sort({ id: 1 })
       .skip(
         PAGE_SIZE *
-          (pages - req.body?.page - 1 <= 0 || req.body?.page === undefined
-            ? pages < 2
-              ? 0
-              : pages - 2
-            : pages - req.body?.page - 2)
+        (pages - req.body?.page - 1 <= 0 || req.body?.page === undefined
+          ? pages < 2
+            ? 0
+            : pages - 2
+          : pages - req.body?.page - 2)
       )
       .limit(
         req.body?.page === undefined
@@ -124,3 +126,21 @@ exports.groupChat = async (req, res) => {
     console.log(error);
   }
 };
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await GuestModel.find({ _id: { $ne: req.user._id } });
+    res.status(200).json({ type: "success", message: "Get all users successfully!", users: users })
+  } catch (err) {
+    console.log(err)
+  }
+};
+exports.getAllConUsers = async (req, res) => {
+  try {
+    const user = await GuestModel.findOne({ _id: req.user._id }).populate({ path: "dmUsers.user" })
+    let conUsers = user.dmUsers
+    res.status(200).json({ type: "success", message: "Get all connected users successfully!", conUsers: conUsers })
+  } catch (err) {
+    console.log(err)
+  }
+}

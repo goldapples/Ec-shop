@@ -1,31 +1,21 @@
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
-
-const ChatPrivateModel = new Schema({
-  recipients: [],
-  delete: {
-    type: Boolean,
-    default: false,
-  },
-  roomId: {
-    type: String,
-  },
-  messages: [
-    {
-      userId: { type: String },
-      chatMsg: { type: String },
-      sentTime: { type: String },
-      sendDate: { type: String },
-      delete: {
-        type: Boolean,
-        default: false,
-      },
+const { Schema, model } = require("mongoose");
+const { modelOption } = require("./config");
+require('./guestModel')
+const ChatPrivateModel = new Schema(
+  {
+    content: { type: String },
+    sender: { type: Schema.Types.ObjectId, ref: "Guest" },
+    receiver: { type: Schema.Types.ObjectId, ref: "Guest" },
+    delete: {
+      type: Boolean,
+      default: false,
     },
-  ],
-  date: {
-    type: Date,
-    default: Date.now(),
+    date: {
+      type: Date,
+      default: Date.now(),
+    },
   },
-});
+  modelOption("chatprivates")
+);
 
-module.exports = mongoose.model("ChatPrivate", ChatPrivateModel);
+module.exports = model("ChatPrivate", ChatPrivateModel);

@@ -27,21 +27,36 @@ module.exports = function (io, socket) {
     chatEvents.getAllPublicMessage(io, socket, data)
   );
   socket.on("C2S_GET_ALL_DIRECT_MESSAGE", (data) =>
-  chatEvents.getAllDirectMessage(io, socket, data)
-);
+    chatEvents.getAllDirectMessage(io, socket, data)
+  );
   socket.on("C2S_NEW_CHARGEOFCOIN", (data) =>
     chatEvents.newCoinCharge(io, socket, data)
   );
   socket.on("C2S_ADD_GROUP", (data) =>
-  chatEvents.addGroup(io, socket, data)
-);
-socket.on("C2S_GET_ALL_CHAT_USER", (data) =>
-  chatEvents.getAllChatUser(io, socket, data)
-);
-socket.on("C2S_GET_ALL_ROOM_CHAT_USER", (data) =>
-  chatEvents.getAllRoomChatUser(io, socket, data)
-);
-socket.on("C2S_GET_ALL_ROOM_MESSAGE", (data) =>
-  chatEvents.getAllRoomMessage(io, socket, data)
-);
+    chatEvents.addGroup(io, socket, data)
+  );
+  socket.on("C2S_GET_ALL_CHAT_USER", (data) =>
+    chatEvents.getAllChatUser(io, socket, data)
+  );
+  socket.on("C2S_GET_ALL_ROOM_CHAT_USER", (data) =>
+    chatEvents.getAllRoomChatUser(io, socket, data)
+  );
+  socket.on("C2S_GET_ALL_ROOM_MESSAGE", (data) =>
+    chatEvents.getAllRoomMessage(io, socket, data)
+  );
+  socket.on("C2S_GET_ALL_DM_MESSAGE", (data) =>
+    chatEvents.getAllDmMessage(io, socket, data)
+  );
+  socket.on("C2S_ADD_DM", (data) =>
+    chatEvents.addDm(io, socket, data)
+  );
+  socket.on("C2S_LOGIN", (data) =>
+    chatEvents.auth(io, socket, data)
+  );
+  socket.on("C2S_LOGOUT", (data) =>
+    chatEvents.auth(io, socket, data)
+  );
+  socket.on("C2S_NEW_DM_MESSAGE", (data) =>{
+    chatEvents.newDM(io, socket, data)
+  })
 };
