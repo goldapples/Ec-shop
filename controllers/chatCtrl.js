@@ -86,7 +86,7 @@ exports.private = async (req, res) => {
     res.json({ all: [] });
   }
 };
-
+// Get all groups
 exports.group = async (req, res) => {
   await ChatGroupModel.find({
     $or: [
