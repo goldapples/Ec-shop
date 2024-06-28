@@ -37,11 +37,11 @@ const guestSchema = new Schema(
       type: String,
     },
     shipping: {
-        country: String,
-        prefecture: String,
-        city: String,
-        apartment: String,
-        roomNumber: Number
+      country: String,
+      prefecture: String,
+      city: String,
+      apartment: String,
+      roomNumber: Number
     },
     wallet: [
       {
@@ -60,6 +60,14 @@ const guestSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Product",
     }],
+    dmUsers: [
+      {
+        user: {
+          type: Schema.Types.ObjectId,
+          ref: "Guest"
+        }
+      }
+    ]
   },
   modelOption("guest")
 );
