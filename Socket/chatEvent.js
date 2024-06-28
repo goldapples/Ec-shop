@@ -2,6 +2,42 @@ const mongoose = require("mongoose");
 const RoomChatting = require("../Models/guestChatting/RoomChattingModel");
 const GeneralChatting = require("../Models/guestChatting/GeneralChattingModel");
 const UserModel = require("../Models/guestModel");
+var nameList = {};
+
+exports.setUser = async (io, socket, data) => {
+  if (data) {
+    nameList[data.id] = socket;
+  }
+  for (let key in nameList) {
+    const res = await UserModel.findOne({ _id: key }).then(async (item) => {
+      await item.update({
+        $set: {
+          status: true,
+        },
+      });
+    });
+    const res1 = await UserModel.findOne({ _id: { $ne: key } }).then(
+      async (item) => {
+        await item.update({
+          $set: {
+            status: false,
+          },
+        });
+      }
+    );
+  }
+  try {
+    const allUser = await UserModel.find({
+      delete: false,
+    });
+    socket.broadcast.emit("S2C_GET_ALL_CHAT_USER", {
+      message: "Get all users successfully!",
+      users: allUser,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 exports.getAllRooms = async (io, socket, data) => {
   const res = await RoomChatting.find({ delete: false });
@@ -28,6 +64,7 @@ exports.newCreateRoom = async (io, socket, data) => {
       await roomChatting.save();
       const rooms = await RoomChatting.find({ delete: false });
       const res = { succes: true, message: "Success!", rooms };
+      socket.broadcast.emit("S2C_CREATE_NEW_GROUP", { res });
       socket.emit("S2C_CREATE_NEW_GROUP", { res });
     }
   } catch (error) {
@@ -71,7 +108,7 @@ exports.getAllChatUser = async (io, socket, data) => {
     const allUser = await UserModel.find({
       delete: false,
       _id: { $ne: id },
-    }).sort({ firstName: -1 });
+    }).sort({ name: -1 });
 
     socket.emit("S2C_GET_ALL_CHAT_USER", {
       message: "Get all users successfully!",
@@ -189,11 +226,11 @@ exports.addGroup = async (io, socket, data) => {
 };
 
 exports.newPublicMessage = async (io, socket, data) => {
-  const generalChatting = new GeneralChatting({
+  const generalChatting = await new GeneralChatting({
     senderId: data.senderId,
     content: data.content,
   });
-  generalChatting.save();
+  await generalChatting.save();
   const res = await GeneralChatting.aggregate([
     {
       $lookup: {
@@ -206,12 +243,12 @@ exports.newPublicMessage = async (io, socket, data) => {
     {
       $match: {
         delete: false,
+        _id: generalChatting._id,
       },
     },
   ]);
-
-  socket.broadcast.emit("S2C_NEW_PUBLIC_MESSAGE", { res });
-  socket.emit("S2C_NEW_PUBLIC_MESSAGE", { res });
+  socket.broadcast.emit("S2C_NEW_MESSAGE", { res, roomId: "general" });
+  socket.emit("S2C_NEW_MESSAGE", { res, roomId: "general" });
 };
 
 exports.getAllPublicMessage = async (io, socket, data) => {
@@ -230,8 +267,7 @@ exports.getAllPublicMessage = async (io, socket, data) => {
       },
     },
   ]);
-
-  socket.emit("S2C_NEW_PUBLIC_MESSAGE", { res });
+  socket.emit("S2C_ALL_PUBLIC_MESSAGE", { res, roomId: "general" });
 };
 
 exports.newRoomMessage = async (io, socket, data) => {
@@ -248,7 +284,7 @@ exports.newRoomMessage = async (io, socket, data) => {
       });
     }
   );
-  const res = await RoomChatting.aggregate([
+  const mes = await RoomChatting.aggregate([
     {
       $match: {
         _id: mongoose.Types.ObjectId(roomId),
@@ -257,11 +293,6 @@ exports.newRoomMessage = async (io, socket, data) => {
     {
       $project: {
         messages: 1,
-      },
-    },
-    {
-      $match: {
-        "messages.delete": false,
       },
     },
     {
@@ -274,8 +305,14 @@ exports.newRoomMessage = async (io, socket, data) => {
       $project: {
         content: "$messages.content",
         senderId: "$messages.senderId",
+        delete: "$messages.delete",
         date: "$messages.date",
       },
+    },
+    {
+      $match : {
+        senderId:mongoose.Types.ObjectId(senderId)
+      }
     },
     {
       $lookup: {
@@ -286,11 +323,10 @@ exports.newRoomMessage = async (io, socket, data) => {
       },
     },
   ]);
-
-  socket.broadcast.emit("S2C_NEW_ROOM_MESSAGE", { res });
-  socket.emit("S2C_NEW_ROOM_MESSAGE", { res });
+  const res = [mes.pop()];
+  socket.broadcast.emit("S2C_NEW_MESSAGE", { res, roomId: roomId });
+  socket.emit("S2C_NEW_MESSAGE", { res, roomId: roomId });
 };
-
 
 exports.getAllRoomMessage = async (io, socket, data) => {
   const { selectRoom: roomId } = data;
@@ -333,8 +369,42 @@ exports.getAllRoomMessage = async (io, socket, data) => {
         },
       },
     ]);
-    socket.broadcast.emit("S2C_NEW_ROOM_MESSAGE", { res });
-    socket.emit("S2C_NEW_ROOM_MESSAGE", { res });
+    socket.emit("S2C_ALL_ROOM_MESSAGE", { res, roomId: roomId });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.deleteSocket = async (io, socket) => {
+  for (const key in nameList) {
+    if (nameList[key] === socket) {
+      delete nameList[key];
+      const res1 = await UserModel.findOne({ _id: key }).then(async (item) => {
+        await item.update({
+          $set: {
+            status: false,
+          },
+        });
+      });
+      const res = await UserModel.findOne({ _id: { $ne: key } }).then(
+        async (item) => {
+          await item.update({
+            $set: {
+              status: true,
+            },
+          });
+        }
+      );
+    }
+  }
+  try {
+    const allUser = await UserModel.find({
+      delete: false,
+    });
+    socket.broadcast.emit("S2C_GET_ALL_CHAT_USER", {
+      message: "Get all users successfully!",
+      users: allUser,
+    });
   } catch (error) {
     console.log(error);
   }

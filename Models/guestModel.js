@@ -52,6 +52,10 @@ const guestSchema = new Schema(
       type: Boolean,
       default: true
     },
+    status: {
+      type: Boolean,
+      default: false
+    },
     delete: {
       type: Boolean,
       default: false,

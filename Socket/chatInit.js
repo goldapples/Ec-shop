@@ -47,4 +47,8 @@ socket.on("C2S_GET_ALL_ROOM_CHAT_USER", (data) =>
 socket.on("C2S_GET_ALL_ROOM_MESSAGE", (data) =>
   chatEvents.getAllRoomMessage(io, socket, data)
 );
+socket.on("disconnect",()=>{
+  console.log("Socket is disconnect")
+  chatEvents.deleteSocket(io,socket)
+})
 };
