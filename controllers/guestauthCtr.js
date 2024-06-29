@@ -4,6 +4,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const config = require("../config/config");
 const passport = require("passport");
+const mongoose = require("mongoose");
+
 
 exports.register = async (req, res) => {
   try {
@@ -419,4 +421,28 @@ exports.logout = async (req, res) => {
       user: user,
     });
   });
+};
+
+
+exports.getAllFriends = async (req, res) => {
+  try {
+    const AllFriend = await Guest.aggregate([
+      {
+        $match: {
+          _id: mongoose.Types.ObjectId(req.user._id),
+        },
+      },
+      {
+        $lookup: {
+          from: "guest",
+          localField: "friends",
+          foreignField: "_id",
+          as: "friends",
+        },
+      },
+    ]);
+    return res.status(200).json({ message: "Successful!", data: AllFriend[0].friends });
+  } catch (err) {
+    res.status(400).json({ type: "error", message: err.message });
+  }
 };

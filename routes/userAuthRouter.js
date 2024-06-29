@@ -19,6 +19,7 @@ router.put("/user/favourite", requireAuth, AuthCtr.favourite);
 
 
 // ===================guest========================
+router.get("/guest/getAllFriends/", requireAuth, GuestAuthCtr.getAllFriends);
 router.put("/guest/update", requireAuth, GuestAuthCtr.update);
 router.put("/shippingadress/update", requireAuth, GuestAuthCtr.shippingupdate);
 
