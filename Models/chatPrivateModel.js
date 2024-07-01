@@ -12,7 +12,6 @@ const ChatPrivateModel = new Schema(
     },
     date: {
       type: Date,
-      default: Date.now(),
     },
   },
   modelOption("chatprivates")

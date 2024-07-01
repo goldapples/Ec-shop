@@ -7,6 +7,26 @@ const UserModel = require("../Models/guestModel");
 
 let userList = {};
 let loginUserList = [];
+
+exports.auth = async (io, socket, data) => {
+    if (data.connect) {
+        if (!loginUserList.includes(data.connect)) {
+            loginUserList.push(data.connect)
+        }
+        userList[data.connect] = socket;
+    } else if (data.disconnect) {
+        loginUserList.map((item, key) => {
+            if (item === data.disconnect) {
+                loginUserList.splice(key, 1)
+            }
+        })
+        userList[data.connect] = socket;
+    }
+    for (let key in userList) {
+        userList[key].emit("S2C_LOGINED_USERS", loginUserList)
+    }
+}
+
 exports.getAllDmMessage = async (io, socket, data) => {
     try {
         const chatData = await ChatPrivateModel.find({
@@ -14,7 +34,7 @@ exports.getAllDmMessage = async (io, socket, data) => {
             { receiver: data.user, sender: data.dmUser }]
         }).populate({
             path: "sender receiver",
-            select: "avartar name birthday phoneNumber"
+            select: "avartar name birthday phoneNumber gender"
         })
         socket.emit("C2S_GET_ALL_DM_MESSAGE", chatData);
     } catch (err) {
@@ -24,61 +44,53 @@ exports.getAllDmMessage = async (io, socket, data) => {
 
 exports.addDm = async (io, socket, data) => {
     try {
-        const guest = await GuestModel.findById(data.user);
-        const includes = guest.dmUsers.filter(item => String(item.user) === String(data.dmUser));
-        if (includes.length === 0) {
+        const guestOfSender = await GuestModel.findById(data.user);
+        const includesOfSender = guestOfSender.dmUsers.filter(item => String(item.user) === String(data.dmUser));
+        if (includesOfSender.length === 0) {
             const added = await GuestModel.findOneAndUpdate({ _id: data.user }, {
                 $push: {
                     dmUsers: { user: data.dmUser }
                 }
             })
-            const Hello = await new ChatPrivateModel({
-                content: "Hello!",
-                sender: data.user,
-                receiver: data.dmUser
-            })
-            Hello.save()
         }
+        const guestOfReceiver = await GuestModel.findById(data.dmUser);
+        const includesOfReceiver = guestOfReceiver.dmUsers.filter(item => String(item.user) === String(data.user));
+        if (includesOfReceiver.length === 0) {
+            const added = await GuestModel.findOneAndUpdate({ _id: data.dmUser }, {
+                $push: {
+                    dmUsers: { user: data.user }
+                }
+            })
+        }
+        const Hello = await new ChatPrivateModel({
+            content: "Hello!",
+            sender: data.user,
+            receiver: data.dmUser,
+            date: new Date()
+        })
+        await Hello.save()
         const chatData = await ChatPrivateModel.find({
             $or: [{ sender: data.user, receiver: data.dmUser },
             { receiver: data.user, sender: data.dmUser }]
         }).populate({
             path: "sender receiver",
-            select: "avartar name birthday phoneNumber"
+            select: "avartar name birthday phoneNumber gender"
         });
-        const sender = await GuestModel.findOne({ _id: data.user }).populate({ path: "dmUsers.user" })
-        const receiver = await GuestModel.findOne({ _id: data.dmUser }).populate({ path: "dmUsers.user" })
+        const sender = await GuestModel.findOne({ _id: data.user })
+            .populate({ path: "dmUsers.user" })
+        const receiver = await GuestModel.findOne({ _id: data.dmUser })
+            .populate({ path: "dmUsers.user" })
         let conUsersOfSender = sender.dmUsers
         let conUsersOfReceiver = receiver.dmUsers
-        socket.emit("C2S_ADD_DM" + data.user, { chatData: chatData, conUsers: conUsersOfSender })
-        for (key in loginUserList) {
-            if (key === data.dmUser) {
-                console.log("first")
-                userList[key].emit("C2S_ADD_DM", { chatData: chatData, conUsers: conUsersOfReceiver, dmUser: data.dmUser })
+        socket.emit("S2C_ADD_DM" + data.user, { chatData: chatData, conUsers: conUsersOfSender })
+        for (let key in userList) {
+            if (key === data?.dmUser) {
+                console.log("key+++++++++++++", key)
+                userList[key].emit("S2C_ADD_DM", { chatData: chatData, conUsers: conUsersOfReceiver })
             }
         }
     } catch (err) {
         console.log(err);
-    }
-}
-
-exports.auth = async (io, socket, data) => {
-    if (data.connect) {
-        if (!loginUserList.includes(data.connect)) {
-            loginUserList.push(data.connect)
-        }
-        userList[data.connect] = socket;
-    } else if (data.disconnect) {
-            console.log(data.disconnect)
-        loginUserList.map((item, key) => {
-            if (item === data.disconnect) {
-                loginUserList.splice(key, 1)
-            }
-        })
-        userList[data.connect] = socket;
-    }
-    for (const key in userList) {
-        userList[key].emit("S2C_LOGINED_USERS", loginUserList)
     }
 }
 
@@ -95,14 +107,14 @@ exports.newDM = async (io, socket, data) => {
             _id: newMsg._id
         }).populate({
             path: "sender receiver",
-            select: "avartar name birthday phoneNumber"
+            select: "avartar name birthday phoneNumber gender"
         });
-        for (let key in loginUserList) {
+        for (let key in userList) {
             if (key === data.receiver) {
                 userList[key].emit("S2C_NEW_DM_MESSAGE", newChat)
             }
         }
-        socket.emit("S2C_NEW_DM_MESSAGE" + newMsg.sender, newChat)
+        socket.emit("S2C_NEW_DM_MESSAGE" + data.sender, newChat)
     } catch (err) {
         console.log(err)
     }
@@ -133,6 +145,7 @@ exports.newCreateRoom = async (io, socket, data) => {
             await roomChatting.save();
             const rooms = await RoomChatting.find({ delete: false });
             const res = { succes: true, message: "Success!", rooms };
+            socket.broadcast.emit("S2C_CREATE_NEW_GROUP", { res });
             socket.emit("S2C_CREATE_NEW_GROUP", { res });
         }
     } catch (error) {
@@ -176,7 +189,7 @@ exports.getAllChatUser = async (io, socket, data) => {
         const allUser = await UserModel.find({
             delete: false,
             _id: { $ne: id },
-        }).sort({ firstName: -1 });
+        }).sort({ name: -1 });
 
         socket.emit("S2C_GET_ALL_CHAT_USER", {
             message: "Get all users successfully!",
@@ -294,11 +307,11 @@ exports.addGroup = async (io, socket, data) => {
 };
 
 exports.newPublicMessage = async (io, socket, data) => {
-    const generalChatting = new GeneralChatting({
+    const generalChatting = await new GeneralChatting({
         senderId: data.senderId,
         content: data.content,
     });
-    generalChatting.save();
+    await generalChatting.save();
     const res = await GeneralChatting.aggregate([
         {
             $lookup: {
@@ -311,12 +324,12 @@ exports.newPublicMessage = async (io, socket, data) => {
         {
             $match: {
                 delete: false,
+                _id: generalChatting._id,
             },
         },
     ]);
-
-    socket.broadcast.emit("S2C_NEW_PUBLIC_MESSAGE", { res });
-    socket.emit("S2C_NEW_PUBLIC_MESSAGE", { res });
+    socket.broadcast.emit("S2C_NEW_MESSAGE", { res, roomId: "general" });
+    socket.emit("S2C_NEW_MESSAGE", { res, roomId: "general" });
 };
 
 exports.getAllPublicMessage = async (io, socket, data) => {
@@ -335,8 +348,7 @@ exports.getAllPublicMessage = async (io, socket, data) => {
             },
         },
     ]);
-
-    socket.emit("S2C_NEW_PUBLIC_MESSAGE", { res });
+    socket.emit("S2C_ALL_PUBLIC_MESSAGE", { res, roomId: "general" });
 };
 
 exports.newRoomMessage = async (io, socket, data) => {
@@ -353,7 +365,7 @@ exports.newRoomMessage = async (io, socket, data) => {
             });
         }
     );
-    const res = await RoomChatting.aggregate([
+    const mes = await RoomChatting.aggregate([
         {
             $match: {
                 _id: mongoose.Types.ObjectId(roomId),
@@ -362,11 +374,6 @@ exports.newRoomMessage = async (io, socket, data) => {
         {
             $project: {
                 messages: 1,
-            },
-        },
-        {
-            $match: {
-                "messages.delete": false,
             },
         },
         {
@@ -379,8 +386,14 @@ exports.newRoomMessage = async (io, socket, data) => {
             $project: {
                 content: "$messages.content",
                 senderId: "$messages.senderId",
+                delete: "$messages.delete",
                 date: "$messages.date",
             },
+        },
+        {
+            $match: {
+                senderId: mongoose.Types.ObjectId(senderId)
+            }
         },
         {
             $lookup: {
@@ -391,11 +404,10 @@ exports.newRoomMessage = async (io, socket, data) => {
             },
         },
     ]);
-
-    socket.broadcast.emit("S2C_NEW_ROOM_MESSAGE", { res });
-    socket.emit("S2C_NEW_ROOM_MESSAGE", { res });
+    const res = [mes.pop()];
+    socket.broadcast.emit("S2C_NEW_MESSAGE", { res, roomId: roomId });
+    socket.emit("S2C_NEW_MESSAGE", { res, roomId: roomId });
 };
-
 
 exports.getAllRoomMessage = async (io, socket, data) => {
     const { selectRoom: roomId } = data;
@@ -438,9 +450,10 @@ exports.getAllRoomMessage = async (io, socket, data) => {
                 },
             },
         ]);
-        socket.broadcast.emit("S2C_NEW_ROOM_MESSAGE", { res });
-        socket.emit("S2C_NEW_ROOM_MESSAGE", { res });
+        socket.emit("S2C_ALL_ROOM_MESSAGE", { res, roomId: roomId });
     } catch (error) {
         console.log(error);
     }
 };
+
+

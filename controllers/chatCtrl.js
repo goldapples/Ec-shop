@@ -129,7 +129,7 @@ exports.groupChat = async (req, res) => {
 
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await GuestModel.find({ _id: { $ne: req.user._id } });
+    const users = await GuestModel.find({ _id: { $ne: req.user._id }, name: { $regex: String(req.query.searchUser), $options: "i" } });
     res.status(200).json({ type: "success", message: "Get all users successfully!", users: users })
   } catch (err) {
     console.log(err)
