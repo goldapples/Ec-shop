@@ -41,45 +41,45 @@ const guestSchema = new Schema(
       prefecture: String,
       city: String,
       apartment: String,
-      roomNumber: Number
+      roomNumber: Number,
     },
     wallet: [
       {
         type: Number,
-      }
+      },
     ],
     guest: {
       type: Boolean,
-      default: true
+      default: true,
     },
     status: {
       type: Boolean,
-      default: false
+      default: false,
     },
     delete: {
       type: Boolean,
       default: false,
     },
-    favourite: [{
-      type: Schema.Types.ObjectId,
-      ref: "Product",
-    }],
+    favourite: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Product",
+      },
+    ],
     dmUsers: [
       {
         user: {
           type: Schema.Types.ObjectId,
-          ref: "Guest"
-        }
-      }
+          ref: "Guest",
+        },
+      },
     ],
     friends: [
       {
-        user: {
-          type: Schema.Types.ObjectId,
-          ref: "Guest"
-        }
-      }
-    ]
+        type: Schema.Types.ObjectId,
+        ref: "guest",
+      },
+    ],
   },
   modelOption("guest")
 );

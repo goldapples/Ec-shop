@@ -456,4 +456,48 @@ exports.getAllRoomMessage = async (io, socket, data) => {
     }
 };
 
-
+exports.addContact = async (io, socket, data) => {
+  const userId = data.user;
+  const friend = data.friend;
+  try {
+    const user = await UserModel.find({ _id: userId, friends: friend });
+    if (user.length === 0) {
+      const room = await UserModel.findOne({ _id: userId }).then(
+        async (item) => {
+          await item.update({
+            $push: {
+              friends: friend,
+            },
+          });
+        }
+      );
+      const AllFriend = await UserModel.aggregate([
+        {
+          $match: {
+            _id: mongoose.Types.ObjectId(userId),
+          },
+        },
+        {
+          $lookup: {
+            from: "guest",
+            localField: "friends",
+            foreignField: "_id",
+            as: "friends",
+          },
+        },
+      ]);
+      socket.emit("S2C_ADD_CONTACT", {
+        succes: true,
+        message: "You add succeefully!",
+        AllFriend: AllFriend[0].friends,
+      });
+    } else {
+      socket.emit("S2C_ADD_CONTACT", {
+        succes: false,
+        message: "Already exited!",
+      });
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};

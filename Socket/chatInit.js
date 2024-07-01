@@ -48,6 +48,9 @@ module.exports = function (io, socket) {
   //   console.log("Socket is disconnect");
   //   chatEvents.deleteSocket(io, socket);
   // });
+  socket.on("C2S_ADD_CONTACT", (data) =>
+      chatEvents.addContact(io, socket, data)
+    );
   socket.on("C2S_GET_ALL_DM_MESSAGE", (data) =>
     chatEvents.getAllDmMessage(io, socket, data)
   );
